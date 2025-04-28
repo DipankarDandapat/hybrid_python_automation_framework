@@ -1,0 +1,35 @@
+29_04_2025 12:06:21 AM -(conftest.py:39)- [INFO] 🔧 Setting up environment: staging
+29_04_2025 12:06:21 AM -(conftest.py:79)- [INFO] Creating WebDriver Manager
+29_04_2025 12:06:21 AM -(web_driver.py:31)- [INFO] Initialized WebDriver Manager with browser: chrome, headless: False
+29_04_2025 12:06:21 AM -(conftest.py:92)- [INFO] Initializing WebDriver (remote: False)
+29_04_2025 12:06:21 AM -(web_driver.py:55)- [INFO] Initializing local chrome WebDriver
+29_04_2025 12:06:33 AM -(web_driver.py:100)- [INFO] Initialized local chrome WebDriver
+29_04_2025 12:06:33 AM -(base_page.py:34)- [INFO] Initialized BasePage with base URL: https://automationexercise.com
+29_04_2025 12:06:33 AM -(base_page.py:62)- [INFO] Opening URL: https://automationexercise.com/login
+29_04_2025 12:06:37 AM -(base_page.py:65)- [INFO] Opened URL successfully: https://automationexercise.com/login
+29_04_2025 12:06:37 AM -(base_page.py:34)- [INFO] Initialized BasePage with base URL: https://automationexercise.com
+29_04_2025 12:06:37 AM -(register_user_page.py:19)- [INFO] Initialized RegisterUserPageLocators
+29_04_2025 12:06:37 AM -(base_page.py:91)- [INFO] Inputting text into element: ('xpath', "//input[@placeholder='Name']")
+29_04_2025 12:06:38 AM -(base_page.py:54)- [INFO] Condition visibility_of_element_located met for locator: ('xpath', "//input[@placeholder='Name']")
+29_04_2025 12:06:38 AM -(base_page.py:98)- [INFO] Entered text 'deep' into element: ('xpath', "//input[@placeholder='Name']")
+29_04_2025 12:06:38 AM -(base_page.py:91)- [INFO] Inputting text into element: ('xpath', "//input[@data-qa='signup-email']")
+29_04_2025 12:06:38 AM -(base_page.py:54)- [INFO] Condition visibility_of_element_located met for locator: ('xpath', "//input[@data-qa='signup-email']")
+29_04_2025 12:06:38 AM -(base_page.py:98)- [INFO] Entered text 'd1@gmail.com' into element: ('xpath', "//input[@data-qa='signup-email']")
+29_04_2025 12:06:38 AM -(base_page.py:80)- [INFO] Clicking on element: ('xpath', "//button[normalize-space()='Signup']")
+29_04_2025 12:06:38 AM -(base_page.py:54)- [INFO] Condition element_to_be_clickable met for locator: ('xpath', "//button[normalize-space()='Signup']")
+29_04_2025 12:06:40 AM -(base_page.py:84)- [INFO] Clicked element: ('xpath', "//button[normalize-space()='Signup']")
+29_04_2025 12:06:45 AM -(base_page.py:269)- [INFO] Finding all elements with locator: ('xpath', "//div[@class='radio-inline']")
+29_04_2025 12:06:45 AM -(base_page.py:76)- [INFO] Finding elements: ('xpath', "//div[@class='radio-inline']")
+29_04_2025 12:06:45 AM -(base_page.py:54)- [INFO] Condition presence_of_all_elements_located met for locator: ('xpath', "//div[@class='radio-inline']")
+29_04_2025 12:06:45 AM -(base_page.py:272)- [INFO] Total elements found: 2
+29_04_2025 12:06:45 AM -(base_page.py:278)- [INFO] Getting text on element The text is :: 'Mr.'
+29_04_2025 12:06:45 AM -(base_page.py:280)- [INFO] Checking element text: 'Mr.'
+29_04_2025 12:06:45 AM -(base_page.py:282)- [INFO] Match found. Clicking element with text: 'Mr.'
+29_04_2025 12:06:50 AM -(base_page.py:323)- [INFO] Waiting for element to be present with locator: ('xpath', "//input[@id='address1']")
+29_04_2025 12:06:50 AM -(base_page.py:54)- [INFO] Condition presence_of_element_located met for locator: ('xpath', "//input[@id='address1']")
+29_04_2025 12:06:50 AM -(base_page.py:333)- [INFO] Element location (X: 480, Y: 1091)
+29_04_2025 12:06:50 AM -(base_page.py:334)- [INFO] Current scroll position (X: 0, Y: 0)
+29_04_2025 12:06:50 AM -(base_page.py:338)- [INFO] Scrolling down to the element
+29_04_2025 12:06:50 AM -(base_page.py:344)- [INFO] Scrolling right to the element
+29_04_2025 12:06:50 AM -(base_page.py:351)- [INFO] Successfully scrolled to element with locator: ('xpath', "//input[@id='address1']")
+29_04_2025 12:06:55 AM -(web_driver.py:263)- [INFO] Quitting WebDriver...........

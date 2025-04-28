@@ -1,0 +1,28 @@
+{
+  "login_test": {
+    "valid_login": {
+      "username": "testuser",
+      "password": "password123",
+      "expected_result": "success",
+      "expected_message": "Welcome, Test User!"
+    },
+    "invalid_login": {
+      "username": "testuser",
+      "password": "wrongpassword",
+      "expected_result": "failure",
+      "expected_message": "Invalid username or password"
+    },
+    "empty_credentials": {
+      "username": "",
+      "password": "",
+      "expected_result": "failure",
+      "expected_message": "Username and password are required"
+    }
+  },
+  "dashboard_test": {
+    "menu_items": ["Home", "Reports", "Users", "Settings", "Help"],
+    "notification_count": 5,
+    "search_query": "test report",
+    "search_results_count": 3
+  }
+}

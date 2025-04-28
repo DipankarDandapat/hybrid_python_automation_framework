@@ -1,0 +1,140 @@
+{
+  "users_api": [
+    {
+      "test_id": "get_users_list_success",
+      "endpoint": "users",
+      "method": "GET",
+      "query_params": {},
+      "payload": null,
+      "expected_status_code": 200,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "page": {"type": "integer"},
+          "per_page": {"type": "integer"},
+          "total": {"type": "integer"},
+          "total_pages": {"type": "integer"},
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "integer"},
+                "email": {"type": "string", "format": "email"},
+                "first_name": {"type": "string"},
+                "last_name": {"type": "string"},
+                "avatar": {"type": "string", "format": "uri"}
+              },
+              "required": ["id", "email", "first_name", "last_name", "avatar"]
+            }
+          }
+        },
+        "required": ["page", "per_page", "total", "total_pages", "data"]
+      },
+      "description": "Get list of users successfully"
+    },
+    {
+      "test_id": "get_user_by_id_success",
+      "endpoint": "users/2",
+      "method": "GET",
+      "query_params": {},
+      "payload": null,
+      "expected_status_code": 200,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {"type": "integer"},
+              "email": {"type": "string", "format": "email"},
+              "first_name": {"type": "string"},
+              "last_name": {"type": "string"},
+              "avatar": {"type": "string", "format": "uri"}
+            },
+            "required": ["id", "email", "first_name", "last_name", "avatar"]
+          }
+        },
+        "required": ["data"]
+      },
+      "description": "Get user by ID successfully"
+    },
+    {
+      "test_id": "get_user_not_found",
+      "endpoint": "users/23",
+      "method": "GET",
+      "query_params": {},
+      "payload": null,
+      "expected_status_code": 404,
+      "schema": {},
+      "description": "Get user by ID - not found"
+    }
+  ],
+  "create_user_api": [
+    {
+      "test_id": "create_user_success",
+      "endpoint": "users",
+      "method": "POST",
+      "query_params": {},
+      "payload": {
+        "name": "John Doe",
+        "job": "Software Engineer"
+      },
+      "expected_status_code": 201,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "job": {"type": "string"},
+          "id": {"type": "string"},
+          "createdAt": {"type": "string", "format": "date-time"}
+        },
+        "required": ["name", "job", "id", "createdAt"]
+      },
+      "description": "Create user successfully"
+    },
+    {
+      "test_id": "create_user_missing_fields",
+      "endpoint": "users",
+      "method": "POST",
+      "query_params": {},
+      "payload": {
+        "name": "John Doe"
+      },
+      "expected_status_code": 201,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "id": {"type": "string"},
+          "createdAt": {"type": "string", "format": "date-time"}
+        },
+        "required": ["name", "id", "createdAt"]
+      },
+      "description": "Create user with missing fields"
+    }
+  ],
+  "update_user_api": [
+    {
+      "test_id": "update_user_success",
+      "endpoint": "users/2",
+      "method": "PUT",
+      "query_params": {},
+      "payload": {
+        "name": "John Updated",
+        "job": "Senior Engineer"
+      },
+      "expected_status_code": 200,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "job": {"type": "string"},
+          "updatedAt": {"type": "string", "format": "date-time"}
+        },
+        "required": ["name", "job", "updatedAt"]
+      },
+      "description": "Update user successfully"
+    }
+  ]
+}

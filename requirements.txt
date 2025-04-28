@@ -1,0 +1,20 @@
+pytest==7.3.1
+pytest-html==4.1.1
+pytest-xdist==3.3.1
+pytest-rerunfailures==11.1.2
+pytest-ordering==0.6
+requests== 2.32.3
+selenium==4.31.0
+webdriver-manager==4.0.2
+python-dotenv==1.0.0
+jsonschema==4.17.3
+allure-pytest==2.13.2
+allure-python-commons==2.13.2
+Faker==18.4.0
+jsonpath_ng
+curlify
+py
+
+
+# pytest tests --test-type=api --environment=staging  --cache-clear -s -v -m "Positive"
+#pytest tests --test-type=api --environment=staging  --cache-clear -s -v -m "Positive"
