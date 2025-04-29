@@ -32,6 +32,12 @@ def pytest_addoption(parser):
     parser.addoption("--headless", action="store_true", help="Run browser in headless mode")
     parser.addoption("--test-type",action="store",default="all",choices=["all", "api", "ui"],help="Run only specific test types: all, api, or ui")
 
+    #parser.addoption("--remote-url", action="store",default="https://hub-cloud.browserstack.com/wd/hub",help="Remote WebDriver URL")
+
+    # Add credential arguments
+    parser.addoption("--bs-username", action="store", default=None,help="BrowserStack/cloud username")
+    parser.addoption("--bs-access-key", action="store", default=None,help="BrowserStack/cloud access key")
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_environment(request):
@@ -54,6 +60,11 @@ def setup_environment(request):
     if platform := request.config.getoption("--platform"):
         os.environ["PLATFORM"] = platform
 
+    if bs_username := request.config.getoption("--bs-username"):
+        os.environ["BS_USERNAME"] = bs_username
+
+    if bs_access_key := request.config.getoption("--bs-access-key"):
+        os.environ["BS_ACCESS_KEY"] = bs_access_key
 
 @pytest.fixture(scope="session")
 def api_session():
