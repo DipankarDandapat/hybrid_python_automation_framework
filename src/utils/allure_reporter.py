@@ -1,65 +1,24 @@
 """
-Allure Report Configuration Module.
+Allure Reporter Module.
 
-This module provides functionality for generating Allure reports.
-It includes custom steps, attachments, and environment information.
+This module provides utility functions for Allure reporting.
 """
+import allure
 import os
 import json
-import allure
 from datetime import datetime
-from pathlib import Path
-from src.utils.logger import get_logger
+from src.utils import logger
 
-logger = get_logger(__name__)
-
-
-def setup_allure_environment():
-    """
-    Set up Allure environment properties.
-    
-    This function creates environment.properties file for Allure reporting.
-    """
-    logger.info("Setting up Allure environment properties")
-    
-    # Get environment variables
-    environment = os.environ.get("ENVIRONMENT", "staging")
-    browser = os.environ.get("BROWSER", "chrome")
-    headless = os.environ.get("HEADLESS", "False")
-    remote = os.environ.get("REMOTE", "False")
-    platform = os.environ.get("PLATFORM", "Windows")
-    
-    # Create environment properties
-    env_properties = {
-        "Environment": environment.upper(),
-        "Browser": browser.capitalize(),
-        "Headless": headless,
-        "Remote Execution": remote,
-        "Platform": platform,
-        "Python Version": os.environ.get("PYTHON_VERSION", "3.10"),
-        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-    
-    # Create allure-results directory if not exists
-    allure_results_dir = Path(__file__).parent.parent.parent / "reports" / "allure-results"
-    allure_results_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Write environment.properties file
-    env_file = allure_results_dir / "environment.properties"
-    with open(env_file, "w") as f:
-        for key, value in env_properties.items():
-            f.write(f"{key}={value}\n")
-    
-    logger.info(f"Allure environment properties saved to {env_file}")
+log = logger.customLogger()
 
 
 def allure_step(step_name):
     """
     Decorator for Allure step.
-    
+
     Args:
         step_name (str): Step name
-        
+
     Returns:
         function: Decorated function
     """
@@ -71,77 +30,112 @@ def allure_step(step_name):
     return decorator
 
 
-def attach_screenshot(driver, name="Screenshot"):
+def add_allure_step(step_name, status="passed"):
+    """
+    Add step to Allure report.
+
+    Args:
+        step_name (str): Step name
+        status (str, optional): Step status. Defaults to "passed".
+    """
+    with allure.step(step_name):
+        if status.lower() == "failed":
+            allure.attach(
+                body=f"Step failed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                name="Failure Details",
+                attachment_type=allure.attachment_type.TEXT
+            )
+
+
+def attach_screenshot(screenshot_path, name="Screenshot"):
     """
     Attach screenshot to Allure report.
-    
+
     Args:
-        driver: WebDriver instance
-        name (str, optional): Screenshot name. Defaults to "Screenshot".
+        screenshot_path (str): Screenshot file path
+        name (str, optional): Attachment name. Defaults to "Screenshot".
     """
     try:
-        allure.attach(
-            driver.get_screenshot_as_png(),
-            name=name,
-            attachment_type=allure.attachment_type.PNG
-        )
-        logger.info(f"Screenshot '{name}' attached to Allure report")
+        if os.path.exists(screenshot_path):
+            with open(screenshot_path, "rb") as file:
+                allure.attach(
+                    file.read(),
+                    name=name,
+                    attachment_type=allure.attachment_type.PNG
+                )
+            log.info(f"Attached screenshot to Allure report: {screenshot_path}")
+        else:
+            log.error(f"Screenshot not found: {screenshot_path}")
     except Exception as e:
-        logger.error(f"Failed to attach screenshot to Allure report: {str(e)}")
+        log.error(f"Failed to attach screenshot to Allure report: {str(e)}")
 
 
-def attach_html(html_content, name="HTML Content"):
+def attach_request_data(method, url, headers=None, params=None, payload=None):
     """
-    Attach HTML content to Allure report.
-    
+    Attach API request data to Allure report.
+
     Args:
-        html_content (str): HTML content
-        name (str, optional): Attachment name. Defaults to "HTML Content".
+        method (str): HTTP method
+        url (str): Request URL
+        headers (dict, optional): Request headers. Defaults to None.
+        params (dict, optional): Request parameters. Defaults to None.
+        payload (dict, optional): Request payload. Defaults to None.
+    """
+    request_data = {
+        "method": method,
+        "url": url,
+        "headers": headers,
+        "params": params,
+        "payload": payload
+    }
+
+    allure.attach(
+        json.dumps(request_data, indent=4, default=str),
+        name="Request Data",
+        attachment_type=allure.attachment_type.JSON
+    )
+    log.info("Attached request data to Allure report")
+
+
+def attach_response_data(response):
+    """
+    Attach API response data to Allure report.
+
+    Args:
+        response: Response object
     """
     try:
-        allure.attach(
-            html_content,
-            name=name,
-            attachment_type=allure.attachment_type.HTML
-        )
-        logger.info(f"HTML content '{name}' attached to Allure report")
-    except Exception as e:
-        logger.error(f"Failed to attach HTML content to Allure report: {str(e)}")
+        response_data = {
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "body": response.json() if response.headers.get('Content-Type', '').startswith('application/json') else response.text
+        }
 
-
-def attach_json(json_data, name="JSON Data"):
-    """
-    Attach JSON testData to Allure report.
-    
-    Args:
-        json_data (dict): JSON testData
-        name (str, optional): Attachment name. Defaults to "JSON Data".
-    """
-    try:
         allure.attach(
-            json.dumps(json_data, indent=2),
-            name=name,
+            json.dumps(response_data, indent=4, default=str),
+            name="Response Data",
             attachment_type=allure.attachment_type.JSON
         )
-        logger.info(f"JSON testData '{name}' attached to Allure report")
+        log.info("Attached response data to Allure report")
     except Exception as e:
-        logger.error(f"Failed to attach JSON testData to Allure report: {str(e)}")
-
-
-def attach_text(text, name="Text Content"):
-    """
-    Attach text content to Allure report.
-    
-    Args:
-        text (str): Text content
-        name (str, optional): Attachment name. Defaults to "Text Content".
-    """
-    try:
+        log.error(f"Failed to attach response data to Allure report: {str(e)}")
         allure.attach(
-            text,
-            name=name,
+            response.text,
+            name="Response Text",
             attachment_type=allure.attachment_type.TEXT
         )
-        logger.info(f"Text content '{name}' attached to Allure report")
-    except Exception as e:
-        logger.error(f"Failed to attach text content to Allure report: {str(e)}")
+
+
+def attach_test_data(test_data):
+    """
+    Attach test data to Allure report.
+
+    Args:
+        test_data (dict): Test data
+    """
+    allure.attach(
+        json.dumps(test_data, indent=4, default=str),
+        name="Test Data",
+        attachment_type=allure.attachment_type.JSON
+    )
+    log.info("Attached test data to Allure report")

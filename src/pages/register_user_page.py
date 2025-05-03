@@ -31,7 +31,7 @@ class RegisterUserPage(BasePage):
 
 
     def clickUserTitle(self,title):
-        self.find_all_elements_click_based_on_text(self.locators.user_title,title)
+        self.find_and_click_element_by_text(self.locators.user_title,title)
 
     def scrollToAdress(self):
-        self.scroll_to_element_automatic(self.locators.address)
+        self.scroll_to_element_by_location(self.locators.address)

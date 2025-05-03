@@ -9,15 +9,15 @@ from src.utils import logger
 log = logger.customLogger()
 
 class TestRegister:
-    """Test class for login functionality."""
+    """Test class for Register functionality."""
 
     @pytest.mark.ui
     def test_register(self, driver):
 
-        base_page = BasePage(driver)
-        base_page.open("login")
 
         register_user = RegisterUserPage(driver)
+        register_user.open(url_path="login")
+
         register_user.enterName("deep")
         register_user.enterEmail("d1@gmail.com")
         register_user.clickSignupButton()
@@ -26,7 +26,7 @@ class TestRegister:
         time.sleep(5)
         register_user.scrollToAdress()
         time.sleep(5)
-        
+
 
 
     # @pytest.mark.ui

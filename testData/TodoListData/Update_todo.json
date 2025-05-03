@@ -2,8 +2,9 @@
   "Positive": [
     {
       "description": "Test with all valid inputs as specified in API information",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -75,8 +76,9 @@
   "Semantic": [
     {
       "description": "Test with multiline text in description field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -146,8 +148,9 @@
     },
     {
       "description": "Test with emojis in description field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -217,8 +220,9 @@
     },
     {
       "description": "Test with given field missing - json_body.description",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -287,8 +291,9 @@
     },
     {
       "description": "Test with given field missing - json_body.title",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -357,8 +362,9 @@
     },
     {
       "description": "Test with an integer value for 'title' field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -428,8 +434,9 @@
     },
     {
       "description": "Test with non-ASCII characters in description",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -499,8 +506,9 @@
     },
     {
       "description": "Test with special characters in title field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -570,8 +578,9 @@
     },
     {
       "description": "Test with emoji characters in title field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -643,8 +652,9 @@
   "Negative": [
     {
       "description": "Test with empty value for title field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -658,8 +668,9 @@
     },
     {
       "description": "Test with empty string for description field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -673,8 +684,9 @@
     },
     {
       "description": "Test with null value for 'title' field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -688,8 +700,9 @@
     },
     {
       "description": "Test with empty string for 'title' field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -703,8 +716,9 @@
     },
     {
       "description": "Test with null value for 'json_body.description' field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -718,8 +732,9 @@
     },
     {
       "description": "Test with empty string for 'json_body.description' field",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PATCH",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -733,8 +748,9 @@
     },
     {
       "description": "Test with wrong HTTP method",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "PUT",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"

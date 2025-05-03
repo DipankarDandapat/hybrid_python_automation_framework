@@ -45,3 +45,11 @@ class DashboardPageLocators:
     SEARCH_BUTTON = (By.ID, "search-button")
     MENU_ITEMS = (By.CSS_SELECTOR, ".menu-item")
     USER_AVATAR = (By.CSS_SELECTOR, ".user-avatar")
+
+
+
+class AutomationPracticeLocators:
+    redioButton1 = (By.XPATH, "//input[@value='radio1']")
+    redioButton2 = (By.XPATH, "//input[@value='radio2']")
+    redioButton3 = (By.XPATH, "//input[@value='radio3']")
+    autocomplete = (By.XPATH, "//input[@id='autocomplete']")

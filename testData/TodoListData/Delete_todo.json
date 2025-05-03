@@ -2,8 +2,9 @@
   "Positive": [
     {
       "description": "Test delete a todo with a valid ID",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "DELETE",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"

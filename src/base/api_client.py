@@ -30,14 +30,17 @@ class APIClient:
         }
         log.info("Initialized API client")
 
-    def make_request(self, base_url: str, api_endpoint: str, method: str = 'GET', **kwargs) -> Any:
+    def make_request(self, base_url: str, api_endpoint: str, method: str = 'GET',path_params: Optional[Dict] = None, **kwargs) -> Any:
         """
         Generic method to make API requests based on the specified method.
 
         Args:
             base_url: Base URL of the API
-            api_endpoint: API endpoint
+            api_endpoint: API endpoint (may contain placeholders like {id})
             method: HTTP method (GET, POST, PUT, PATCH, DELETE)
+            path_params: Dictionary to replace path placeholders in api_endpoint
+            api_endpoint = "/api/v1/todos/{id}"  # Must include {id}
+            path_params = {"id": "123"}  # Key must match the placeholder
             **kwargs: Additional arguments to pass to the request method
 
         Returns:
@@ -45,13 +48,29 @@ class APIClient:
 
         Raises:
             ValueError: If unsupported HTTP method is provided
+            KeyError: If path_params is missing a required placeholder
         """
         method = method.upper()
         if method not in self.method_map:
             raise ValueError(f"Unsupported HTTP method: {method}")
 
+        if path_params:
+
+            try:
+                log.info(f"Before replacement: {api_endpoint}, path_params: {path_params}")
+                api_endpoint = api_endpoint.format(**path_params)
+                log.info(f"After replacement: {api_endpoint}")
+            except KeyError as e:
+                log.error(f"Missing path parameter: {e}")
+                raise
+            except Exception as e:
+                log.error(f"Error formatting path parameters: {e}")
+                raise
+
         log.info(f"Making {method} request to {base_url}{api_endpoint}")
         return self.method_map[method](base_url, api_endpoint, **kwargs)
+
+
 
     def get_request(self, base_url: str, api_endpoint: str, header: Optional[Dict] = None,
                     query_params: Optional[Dict] = None) -> Any:

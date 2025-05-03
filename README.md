@@ -11,6 +11,7 @@
 8. [Reporting](#reporting)
 9. [Extending the Framework](#extending-the-framework)
 10. [Best Practices](#best-practices)
+11. [Allure Reporting Implementation Guide](#Allure-Reporting-Implementation-Guide)
 
 ## Introduction
 
@@ -34,13 +35,6 @@ The framework follows a layered architecture with the following components:
 ```
 automation_framework_updated/
 │
-├── API_Utilities/                # API testing utilities
-│   ├── api_client.py            # API client for making requests
-│   ├── api_utilities.py         # Utility functions for API testing
-│   ├── api_validations.py       # Validation functions for API testing
-│   ├── file_reader.py           # File reader for test data
-│   ├── logger_utility.py        # Logging utility
-│   └── Shared_API_Data.py       # Shared data between API tests
 │
 ├── config/                      # Configuration files
 │   ├── config.ini               # General framework configuration
@@ -48,11 +42,10 @@ automation_framework_updated/
 │   ├── .env.staging             # Staging environment variables
 │   └── .env.prod                # Production environment variables
 │
-├── data/                        # Test data
-│   └── test_data/               # JSON test data files
-│       └── AITestPlatformData/  # Test data for API tests
-│           ├── workSector.json  # Work sector API test data
-│           └── users.json       # Users API test data
+├── test_data/                        # JSON test data files
+│   └── TodoListData/            # Test data for API tests
+│        ├── Create_todos.json   # Create To-Dos API test data
+│        └── Delete_todo.json    # Delete To-Dos API test data
 │
 ├── logs/                        # Test execution logs
 │
@@ -62,13 +55,20 @@ automation_framework_updated/
 │
 ├── src/                         # Source code
 │   ├── base/                    # Base components
+│   │   ├── api_client.py        # API client for making requests
 │   │   └── web_driver.py        # WebDriver manager
 │   │
 │   ├── utils/                   # Utility modules
+│   │   ├── api_utilities.py     # Utility and Validation functions for API testing
+│   │   ├── file_reader.py       # File reader for test data
+│   │   ├── logger.py            # Logging utility
+│   │   ├── allure_reporter.py   # Allure Function
+│   │   └── Shared_API_Data.py   # Shared data between API tests
 │   │
 │   └── pages/                   # Page Objects for UI testing
 │       ├── base_page.py         # Base page with common methods
 │       └── locators.py          # UI element locators
+│       ├── RahulshettyAcademyPage/
 │
 ├── tests/                       # Test modules
 │   ├── api/                     # API tests
@@ -123,8 +123,8 @@ These files contain environment-specific variables such as API URLs, credentials
 The following environment variables are used by the framework:
 
 #### API Testing
-- `AI_TUTOR_URL`: Base URL for API testing
-- `AI_TUTOR_TOKEN`: Authentication token for API testing
+- `TO_DOS`: TO_DOS Base URL for API testing
+
 
 #### UI Testing
 - `UI_BASE_URL`: Base URL for UI testing
@@ -159,7 +159,7 @@ The framework supports various command line options for test execution:
 To run API tests only:
 
 ```bash
-pytest tests/api --test-type=api --environment=staging -v
+pytest tests --test-type=api --environment=staging -v
 ```
 
 ### Running UI Tests
@@ -167,21 +167,21 @@ pytest tests/api --test-type=api --environment=staging -v
 To run UI tests locally:
 
 ```bash
-pytest tests/ui --test-type=ui --environment=staging --browser=chrome -v
+pytest tests --test-type=ui --environment=staging --browser=chrome -v
 ```
 
 To run UI tests on BrowserStack or LambdaTest:
 
 ```bash
-pytest tests/ui --test-type=ui --environment=staging --browser=chrome --remote --platform=Windows -v
+pytest tests --test-type=ui --environment=staging --browser=chrome --remote --platform=Windows -v
 ```
 
-### Running All Tests
+### Running All Tests In Local
 
 To run all tests:
 
 ```bash
-pytest --environment=staging -v
+pytest tests --test-type=all --environment=staging -v
 ```
 
 ## API Testing
@@ -248,26 +248,25 @@ API tests are created using pytest's parameterization feature:
 
 ```python
 import pytest
-from API_Utilities.api_utilities import get_response_data, get_value_from_response
-from API_Utilities.api_validations import validate_response_code, validate_in_response_body, validate_schema,
-    validate_response_content_type
-from src.utils.file_reader import read_file
-from API_Utilities.Shared_API_Data import shared_data
 import os
-from API_Utilities import logger_utility
+from src.utils.shared_API_Data import shared_data
+from src.utils.api_utilities import validate_response_code, validate_schema, validate_response_content_type, \
+    validate_in_response_body, get_value_from_response
+from src.utils.file_reader import read_file
+from src.utils import logger
+log = logger.customLogger()
 
-log = logger_utility.customLogger()
-
-testcasedata = read_file("AITestPlatformData", 'workSector.json')
-
+testcasedata = read_file("TodoListData", 'Create_todos.json')
 
 @pytest.mark.Positive
-@pytest.mark.parametrize("case", testcasedata["positive"])
-def test_workSector(api_request_context, case):
-    baseURL = os.getenv('AI_TUTOR_URL')
-    token = os.getenv('AI_TUTOR_TOKEN')
-    case["headers"]["X-Resume-Builder-Token"] = token
+@pytest.mark.parametrize("case", testcasedata["Positive"])
+def test_Create_Todo_Positive(api_request_context, case):
 
+    log.info(f"Running test case: {case['description']}")
+
+    baseURL = os.getenv('TO_DOS')
+
+    # Make API request
     response = api_request_context.make_request(
         base_url=baseURL,
         method=case["method"],
@@ -276,8 +275,20 @@ def test_workSector(api_request_context, case):
         payload=case["payload"]
     )
 
-    validate_schema(response=response, schema=case['expected_schema'])
+    # Validate response
+    validate_response_code(response, case["expected_status"])
+
+    # Validate content type
     validate_response_content_type(response)
+
+    validate_in_response_body(response, 'data.title', case["payload"]["title"], 'title not matches')
+    validate_in_response_body(response, 'data.description', case["payload"]["description"], 'description not matches')
+
+    shared_data.set_data("todos_id", get_value_from_response(response, 'data._id'))
+
+    # Validate schema if provided
+    if "expected_schema" in case and case["expected_schema"]:
+        validate_schema(response=response, schema=case["expected_schema"])
 ```
 
 ## UI Testing
@@ -393,3 +404,241 @@ The framework includes comprehensive logging with:
 - Log important information for debugging
 - Use fixtures for common setup and teardown
 - Run tests in parallel when possible
+
+
+## Allure Reporting Implementation Guide
+
+## Overview
+
+This document provides instructions on how to use Allure reporting in the automation framework. Allure provides rich and detailed test reports with features like test steps, attachments, and categorization.
+
+
+
+## Setup
+
+Allure is already included in the framework dependencies. Make sure you have installed all requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+To generate Allure reports, you need to install the Allure command-line tool:
+
+### For Linux:
+```bash
+sudo apt-add-repository ppa:qameta/allure
+sudo apt-get update
+sudo apt-get install allure
+```
+
+### For macOS:
+```bash
+brew install allure
+```
+
+### For Windows:
+```bash
+scoop install allure
+```
+
+## Running Tests with Allure
+
+To run tests with Allure reporting enabled, use the following command:
+
+```bash
+pytest tests --test-type=api --environment=staging --alluredir=reports/allure-results
+```
+
+This will run the tests and generate Allure result files in the `reports/allure-results` directory.
+
+## Generating Allure Reports
+
+After running the tests, generate the Allure report with:
+
+```bash
+allure serve reports/allure-results
+```
+
+This will generate and open the report in your default web browser.
+
+To generate a static report:
+
+```bash
+allure generate reports/allure-results -o reports/allure-report
+```
+
+Then you can open the report by opening `reports/allure-report/index.html` in a web browser.
+
+## Allure Features Used in Framework
+
+The framework uses the following Allure features:
+
+1. **Epic, Feature, and Story**: Hierarchical organization of tests
+2. **Test Title and Description**: Detailed test information
+3. **Severity Levels**: Indicating test importance
+4. **Steps**: Breaking down test execution into logical steps
+5. **Attachments**: Including screenshots, request/response data, and test data
+6. **Dynamic Test Metadata**: Setting test metadata at runtime
+
+## API Test Example
+
+The API test example (`test_01_Create_Todo.py`) demonstrates:
+
+- Setting Epic, Feature, and Story
+- Adding test title and description
+- Setting severity level
+- Breaking down test into steps
+- Attaching request and response data
+- Attaching test data
+
+Example:
+
+```python
+import allure
+import pytest
+import os
+from src.utils.shared_API_Data import shared_data
+from src.utils.api_utilities import validate_response_code, validate_schema, validate_response_content_type, \
+    validate_in_response_body, get_value_from_response
+from src.utils.file_reader import read_file
+from src.utils.allure_reporter import (
+    allure_step,
+    add_allure_step,
+    attach_request_data,
+    attach_response_data,
+    attach_test_data
+)
+from src.utils import logger
+
+
+log = logger.customLogger()
+
+testcasedata = read_file("TodoListData", 'Create_todos.json')
+
+@allure.epic("API Testing")
+@allure.feature("Todo_List")
+@pytest.mark.Positive
+@pytest.mark.parametrize("case", testcasedata["Positive"])
+def test_Create_Todo_Positive(api_request_context, case):
+    # Allure test metadata
+    allure.dynamic.story("Positive User API Tests")
+    allure.dynamic.title(f"Test User API: {case['endpoint']} - {case['method']}")
+    allure.dynamic.description(f"Testing {case['method']} request to {case['endpoint']} with expected status {case.get('expected_status', 200)}")
+    allure.dynamic.severity(allure.severity_level.NORMAL)
+    # Attach test data to report
+    attach_test_data(case)
+    # Setup test
+    add_allure_step("Setting up test environment")
+
+    log.info(f"Running test case: {case['description']}")
+
+    baseURL = os.getenv('TO_DOS')
+
+    with allure.step(f"Making {case['method']} request to {baseURL}{case['endpoint']}"):
+        # Attach request data
+        attach_request_data(
+            method=case["method"],
+            url=f"{baseURL}{case['endpoint']}",
+            headers=case["headers"],
+            payload=case["payload"]
+        )
+
+        # Make API request
+        response = api_request_context.make_request(
+            base_url=baseURL,
+            method=case["method"],
+            api_endpoint=case["endpoint"],
+            header=case["headers"],
+            payload=case["payload"]
+        )
+
+        # Attach response data
+        attach_response_data(response)
+
+    # Validate response
+    with allure.step("Validating response status code"):
+        status_valid=validate_response_code(response, case["expected_status"])
+    
+    # Validate content type
+    with allure.step("Validating response content type"):
+        validate_response_content_type(response)
+        
+    # Validate response body
+    with allure.step("Validating response body content "):
+        validate_in_response_body(response, 'data.title', case["payload"]["title"], 'title not matches')
+        validate_in_response_body(response, 'data.description', case["payload"]["description"], 'description not matches')
+
+
+    shared_data.set_data("todos_id", get_value_from_response(response, 'data._id'))
+
+    # Validate schema if provided
+    with allure.step("Validating response schema"):
+        if "expected_schema" in case and case["expected_schema"]:
+            validate_schema(response=response, schema=case["expected_schema"])
+```
+### 📊 Sample Allure Report
+
+![Allure Report Screenshot](docs/images/allure_report_api.png)
+
+
+## UI Test Example
+
+The UI test example (`test_login_allure.py`) demonstrates:
+
+- Setting Epic, Feature, and Story
+- Adding test title and description
+- Setting severity level
+- Breaking down test into steps
+- Attaching screenshots at different test stages
+
+Example:
+
+```python
+@allure.epic("UI Testing")
+@allure.feature("Authentication")
+class TestLogin:
+    @allure.story("Login Functionality")
+    @allure.title("Verify Login with Valid Credentials")
+    @allure.description("This test verifies that a user can successfully login with valid credentials")
+    @allure.severity(allure.severity_level.CRITICAL)
+    @pytest.mark.ui
+    def test_login_with_valid_credentials(self, driver):
+        # Test steps with allure.step
+        with allure.step("Opening login page"):
+            # Step implementation
+        
+        # Attach screenshots
+        screenshot_path = base_page.take_screenshot("login_page.png")
+        attach_screenshot(screenshot_path, "Login Page Screenshot")
+```
+
+## Best Practices
+
+1. **Use Hierarchical Organization**: 
+   - Epic: High-level feature area (e.g., "API Testing", "UI Testing")
+   - Feature: Specific feature (e.g., "Todo_List", "Authentication")
+   - Story: User story or test scenario (e.g., "Login Functionality")
+
+2. **Add Descriptive Titles and Descriptions**:
+   - Title should be clear and concise
+   - Description should provide more details about the test purpose
+
+3. **Set Appropriate Severity Levels**:
+   - BLOCKER: Tests that block further testing
+   - CRITICAL: Critical functionality tests
+   - NORMAL: Regular functionality tests
+   - MINOR: Minor functionality tests
+   - TRIVIAL: Trivial tests
+
+4. **Use Steps to Break Down Tests**:
+   - Each logical step should be wrapped in `allure.step`
+   - Steps should be descriptive and follow a logical sequence
+
+5. **Add Relevant Attachments**:
+   - Screenshots for UI tests
+   - Request/response data for API tests
+   - Test data for both API and UI tests
+
+6. **Handle Failures Gracefully**:
+   - Attach additional information on test failure
+   - Take screenshots on UI test failures

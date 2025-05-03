@@ -26,12 +26,14 @@ def test_Delete_todo_Positive(api_request_context, case):
 
     baseURL = os.getenv('TO_DOS')
     todos=shared_data.get_data("todos_id")
+    case["path_params"]["id"] = todos
 
     # Make API request
     response = api_request_context.make_request(
         base_url=baseURL,
         method=case["method"],
-        api_endpoint=case["endpoint"]+str(todos),
+        api_endpoint=case["endpoint"],
+        path_params=case["path_params"],
         header=case["headers"]
     )
 
@@ -56,12 +58,14 @@ def test_Delete_todo_Semantic(api_request_context, case):
     baseURL = os.getenv('TO_DOS')
 
     todos = shared_data.get_data("todos_id")
+    case["path_params"]["id"] = todos
 
     # Make API request
     response = api_request_context.make_request(
         base_url=baseURL,
         method=case["method"],
-        api_endpoint=case["endpoint"]+str(todos),
+        api_endpoint=case["endpoint"],
+        path_params=case["path_params"],
         header=case["headers"]
     )
 

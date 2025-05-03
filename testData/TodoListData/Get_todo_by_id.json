@@ -2,8 +2,9 @@
   "Positive": [
     {
       "description": "Test fetching a todo with a valid ID",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "GET",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
@@ -71,8 +72,9 @@
   "Semantic": [
     {
       "description": "Test fetching a todo where description contains special characters",
-      "endpoint": "/api/v1/todos/",
+      "endpoint": "/api/v1/todos/{id}",
       "method": "GET",
+      "path_params": {"id": "REPLACE_WITH_DATA"},
       "headers": {
         "content-type": "application/json",
         "accept": "application/json"
