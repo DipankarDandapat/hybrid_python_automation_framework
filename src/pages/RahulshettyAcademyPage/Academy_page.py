@@ -25,7 +25,7 @@ class AcademyPage(BasePage):
 
     def open_academyPage_page(self):
         log.info("Opening AcademyPage page")
-        self.open("AutomationPractice",base_url_env_key="RAHULSHETTYACADEMY")
+        self.open("RAHULSHETTYACADEMY",url_path="AutomationPractice")
         return self
 
     def clickRadioButtonBaseonName(self, buttonName):
@@ -39,12 +39,42 @@ class AcademyPage(BasePage):
 
     def enterandAutoselectCountry(self,country):
         self.input_text(self.locators.autocomplete,country)
-        time.sleep(2)
+        self.press_key("ARROW_DOWN")
+        self.press_key("ARROW_DOWN")
+        self.press_key("ENTER")
 
-        self.press_key_down("ARROW_DOWN")
-        self.press_key_down("ARROW_DOWN")
-        time.sleep(1)
-        self.press_key_down("ENTER")
 
+    def selectDropdownByValue(self,dropdownvalue):
+        self.select_dropdown_option_by_value(locator=self.locators.dropdown,value=dropdownvalue)
+
+
+    def selectCheckBox(self):
+        if not self.is_element_selected(self.locators.option1checkbox):
+            self.click(self.locators.option1checkbox)
+
+
+    def switchWindows(self):
+        self.click(self.locators.switchWindows)
+        # l=self.get_window_handles()
+        # self.switch_to_window_by_handle(l[1])
+        self.switch_to_window_by_index(1)
+        self.click(self.locators.logo)
+        self.close_current_window_and_switch_back()
+
+    def switchOpenTab(self):
+        self.click(self.locators.opentab)
+        self.switch_to_window_by_index(1)
+        self.click(self.locators.logo)
+        self.open_new_tab_and_switch()
+        self.close_current_window_and_switch_back()
+
+    def switchAlert(self,name):
+        self.input_text(self.locators.alertName,name)
+        self.click(self.locators.alertButton)
+        time.sleep(3)
+        print(self.wait_for_alert())
+        print("#######################")
+        self.accept_alert()
+        time.sleep(3)
 
 

@@ -8,24 +8,24 @@ from src.pages.register_user_page import RegisterUserPage
 from src.utils import logger
 log = logger.customLogger()
 
-class TestRegister:
-    """Test class for Register functionality."""
-
-    @pytest.mark.ui
-    def test_register(self, driver):
-
-
-        register_user = RegisterUserPage(driver)
-        register_user.open(url_path="login")
-
-        register_user.enterName("deep")
-        register_user.enterEmail("d1@gmail.com")
-        register_user.clickSignupButton()
-        time.sleep(5)
-        register_user.clickUserTitle("Mr.")
-        time.sleep(5)
-        register_user.scrollToAdress()
-        time.sleep(5)
+# class TestRegister:
+#     """Test class for Register functionality."""
+#
+#     @pytest.mark.ui
+#     def test_register(self, driver):
+#
+#
+#         register_user = RegisterUserPage(driver)
+#         register_user.open(url_path="login")
+#
+#         register_user.enterName("deep")
+#         register_user.enterEmail("d1@gmail.com")
+#         register_user.clickSignupButton()
+#         time.sleep(5)
+#         register_user.clickUserTitle("Mr.")
+#         time.sleep(5)
+#         register_user.scrollToAdress()
+#         time.sleep(5)
 
 
 

@@ -491,14 +491,14 @@ class BasePage:
     @retry_on_stale()
     def select_dropdown_option_by_text(self, locator, visible_text, timeout=None):
         """Selects an option from a dropdown by its visible text."""
-        log.info(f"Selecting dropdown option by text: ", {visible_text}, f" for locator: {locator}")
+        log.info(f"Selecting dropdown option by text: '{visible_text}' for locator: {locator}")
         try:
             element = self._wait_for_condition(locator, EC.visibility_of_element_located, timeout)
             select = Select(element)
             select.select_by_visible_text(visible_text)
-            log.info(f"Selected option ", {visible_text}, f" successfully.")
+            log.info(f"Selected option '{visible_text}' successfully.")
         except Exception as e:
-            log.error(f"Failed to select dropdown option by text ", {visible_text}, f" for {locator}: {str(e)}")
+            log.error(f"Failed to select dropdown option by text '{visible_text}' for {locator}: {str(e)}")
             self.take_screenshot("dropdown_select_failed")
             raise
         return self
@@ -506,14 +506,14 @@ class BasePage:
     @retry_on_stale()
     def select_dropdown_option_by_value(self, locator, value, timeout=None):
         """Selects an option from a dropdown by its value attribute."""
-        log.info(f"Selecting dropdown option by value: ", {value}, f" for locator: {locator}")
+        log.info(f"Selecting dropdown option by value: '{value}' for locator: {locator}")
         try:
             element = self._wait_for_condition(locator, EC.visibility_of_element_located, timeout)
             select = Select(element)
             select.select_by_value(value)
-            log.info(f"Selected option with value ", {value}, f" successfully.")
+            log.info(f"Selected option with value '{value}' successfully.")
         except Exception as e:
-            log.error(f"Failed to select dropdown option by value ", {value}, f" for {locator}: {str(e)}")
+            log.error(f"Failed to select dropdown option by value '{value}' for {locator}: {str(e)}")
             self.take_screenshot("dropdown_select_failed")
             raise
         return self
@@ -592,6 +592,21 @@ class BasePage:
                 raise ValueError(
                     f"Invalid key string: '{key_str_or_obj}'. Must match Keys attributes like 'ENTER', 'TAB'.")
         return key_str_or_obj  # already a Keys constant
+
+    def press_key(self, key, locator=None, timeout=None):
+        try:
+            key_obj = self._get_key(key)
+            action = ActionChains(self.driver)
+
+            if locator:
+                element = self._wait_for_condition(locator, EC.visibility_of_element_located, timeout)
+                action.send_keys_to_element(element, key_obj).perform()
+            else:
+                action.send_keys(key_obj).perform()
+        except Exception as e:
+            log.error(f"Failed to press key '{key}': {e}")
+            raise
+
 
     def press_key_down(self, key, locator=None, timeout=None):
         """
@@ -818,12 +833,11 @@ class BasePage:
         try:
             alert = self.wait_for_alert(timeout)
             alert_text = alert.text  # Get text before accepting
-            log.info(f"Alert text: ", {alert_text}, "")
+            log.info(f"Alert text: {alert_text}")
             alert.accept()
             log.info("Alert accepted successfully")
         except Exception as e:
             log.error(f"Failed to accept alert: {str(e)}")
-            # Screenshot might be difficult if alert blocks it
             raise
         return self
 
@@ -965,6 +979,7 @@ class BasePage:
         Args:
             action_func (callable): The function/method that triggers the new window.
             timeout (int, optional): Max time to wait for the new window.
+        Ex: self.switch_to_new_window_after_action(lambda: self.click(self.locators.switchWindows))
         """
         timeout = timeout if timeout is not None else self.explicit_wait_timeout
         log.info("Performing action and waiting for new window...")
@@ -997,38 +1012,70 @@ class BasePage:
 
     def close_current_window_and_switch_back(self, original_handle=None):
         """
-        Closes the current window/tab and switches back to the original one
-        or the first available one if original_handle is not provided.
-
-        Args:
-            original_handle (str, optional): The handle of the window to switch back to.
+        Closes the current window/tab and switches back to the original one,
+        or the first remaining if not provided.
         """
         log.info("Closing current window...")
         current_handle = self.get_current_window_handle()
         try:
             self.driver.close()
             log.info(f"Closed window: {current_handle}")
-
             remaining_handles = self.get_window_handles()
+
             if not remaining_handles:
                 log.warning("No windows remain open.")
-                return self  # Or raise error?
+                return self
 
-            target_handle = None
-            if original_handle and original_handle in remaining_handles:
-                target_handle = original_handle
-            elif remaining_handles:
-                target_handle = remaining_handles[0]  # Default to first remaining
-
-            if target_handle:
-                log.info(f"Switching back to window: {target_handle}")
-                self.switch_to_window_by_handle(target_handle)
-            else:
-                log.warning("Could not determine which window to switch back to.")
+            target_handle = (
+                original_handle if original_handle in remaining_handles else remaining_handles[0]
+            )
+            log.info(f"Switching back to window: {target_handle}")
+            self.switch_to_window_by_handle(target_handle)
 
         except Exception as e:
             log.error(f"Error closing current window or switching back: {str(e)}")
-            # Don"t raise if the goal was just to close, maybe?
+        return self
+
+    def open_new_tab_and_switch(self):
+        """Opens a new tab and switches to it."""
+        log.info("Opening a new tab...")
+        try:
+            self.driver.switch_to.new_window('tab')
+            new_handle = self.get_current_window_handle()
+            log.info(f"Switched to new tab with handle: {new_handle}")
+        except Exception as e:
+            log.error(f"Failed to open and switch to new tab: {str(e)}")
+            raise
+        return self
+
+    def open_new_window_and_switch(self):
+        """Opens a new window and switches to it."""
+        log.info("Opening a new window...")
+        try:
+            self.driver.switch_to.new_window('window')
+            new_handle = self.get_current_window_handle()
+            log.info(f"Switched to new window with handle: {new_handle}")
+        except Exception as e:
+            log.error(f"Failed to open and switch to new window: {str(e)}")
+            raise
+        return self
+
+    def switch_to_non_original_window(self, original_handle):
+        """
+        Switches to a window/tab that is not the original one.
+        Useful after opening a new tab/window.
+        """
+        try:
+            handles = self.get_window_handles()
+            for handle in handles:
+                if handle != original_handle:
+                    self.switch_to_window_by_handle(handle)
+                    log.info(f"Switched to new window/tab: {handle}")
+                    return self
+            log.warning("No other window/tab found to switch.")
+        except Exception as e:
+            log.error(f"Failed to switch to non-original window: {str(e)}")
+            raise
         return self
 
     # --- Browser/Page Information ---

@@ -33,7 +33,7 @@ This hybrid automation testing framework is designed to support both API and UI 
 The framework follows a layered architecture with the following components:
 
 ```
-automation_framework_updated/
+hybrid_python_automation_framework/
 │
 │
 ├── config/                      # Configuration files
@@ -93,13 +93,14 @@ automation_framework_updated/
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd automation_framework_updated
+cd hybrid_python_automation_framework
 ```
 
 2. Create and activate a virtual environment:
 ```bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  
+# On Windows: venv\Scripts\activate
 ```
 
 3. Install dependencies:

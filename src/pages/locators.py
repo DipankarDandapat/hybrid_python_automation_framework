@@ -53,3 +53,12 @@ class AutomationPracticeLocators:
     redioButton2 = (By.XPATH, "//input[@value='radio2']")
     redioButton3 = (By.XPATH, "//input[@value='radio3']")
     autocomplete = (By.XPATH, "//input[@id='autocomplete']")
+    dropdown =     (By.XPATH, "//select[@id='dropdown-class-example']")
+    option1checkbox =     (By.XPATH, "//input[@id='checkBoxOption1']")
+    switchWindows =     (By.XPATH, "//button[@id='openwindow']")
+    logo =     (By.XPATH, "//a[@href='https://www.qaclickacademy.com']//img[@alt='Logo']")
+    opentab =     (By.XPATH, "//a[@id='opentab']")
+    alertName =     (By.XPATH, "//input[@id='name']")
+    alertButton =     (By.XPATH, "//input[@id='alertbtn']")
+
+
