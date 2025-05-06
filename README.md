@@ -470,6 +470,23 @@ allure generate reports/allure-results -o reports/allure-report
 
 Then you can open the report by opening `reports/allure-report/index.html` in a web browser.
 
+## Viewing the Allure Report
+
+The Allure report provides a rich, interactive interface with:
+
+1. **Overview**: Test execution summary with pass/fail statistics
+2. **Categories**: Tests grouped by failure categories
+3. **Suites**: Tests organized by test suites
+4. **Graphs**: Visual representation of test results
+5. **Timeline**: Chronological view of test execution
+6. **Behaviors**: Tests organized by epics, features, and stories
+7. **Packages**: Tests organized by packages
+
+## Adding Screenshots and Other Attachments
+
+You can attach screenshots, logs, and other files to the Allure report:
+
+
 ## Allure Features Used in Framework
 
 The framework uses the following Allure features:
@@ -577,14 +594,14 @@ def test_Create_Todo_Positive(api_request_context, case):
         if "expected_schema" in case and case["expected_schema"]:
             validate_schema(response=response, schema=case["expected_schema"])
 ```
-### 📊 Sample Allure Report
+### 📊 Sample Allure Report For API
 
 ![Allure Report Screenshot](docs/images/allure_report_api.png)
 
 
 ## UI Test Example
 
-The UI test example (`test_login_allure.py`) demonstrates:
+The UI test example (`test_academy.py`) demonstrates:
 
 - Setting Epic, Feature, and Story
 - Adding test title and description
@@ -595,23 +612,67 @@ The UI test example (`test_login_allure.py`) demonstrates:
 Example:
 
 ```python
+import time
+import allure
+import pytest
+from src.pages.RahulshettyAcademyPage.Academy_page import AcademyPage
+from src.utils import logger
+
+log = logger.customLogger()
+
 @allure.epic("UI Testing")
-@allure.feature("Authentication")
-class TestLogin:
-    @allure.story("Login Functionality")
-    @allure.title("Verify Login with Valid Credentials")
-    @allure.description("This test verifies that a user can successfully login with valid credentials")
-    @allure.severity(allure.severity_level.CRITICAL)
+@allure.feature("Academy Page Features")
+class TestAcademy:
+
     @pytest.mark.ui
-    def test_login_with_valid_credentials(self, driver):
-        # Test steps with allure.step
-        with allure.step("Opening login page"):
-            # Step implementation
-        
-        # Attach screenshots
-        screenshot_path = base_page.take_screenshot("login_page.png")
-        attach_screenshot(screenshot_path, "Login Page Screenshot")
+    def test_academy_radio_button(self, driver):
+        allure.dynamic.story("Radio Button Interaction")
+        allure.dynamic.title("Test Academy Radio Button Selection")
+        allure.dynamic.description("Verify user can select a specific radio button on the academy page.")
+        academy_page = AcademyPage(driver)
+        with allure.step("Open academy page"):
+            academy_page.open_academyPage_page()
+        with allure.step("Select radio button by name"):
+            academy_page.clickRadioButtonBaseonName("Radio2")
+
+    @pytest.mark.ui
+    def test_academy_select_country(self, driver):
+        allure.dynamic.story("Autocomplete Feature")
+        allure.dynamic.title("Test Academy Country Autocomplete")
+        allure.dynamic.description("Verify user can enter and select a country using the autocomplete field.")
+
+        academy_page = AcademyPage(driver)
+        with allure.step("Open academy page"):
+            academy_page.open_academyPage_page()
+        with allure.step("Enter and auto-select country"):
+            academy_page.enterandAutoselectCountry("india")
+
+    @pytest.mark.ui
+    def test_academy_select_dropdown(self, driver):
+        allure.dynamic.story("Dropdown Feature")
+        allure.dynamic.title("Test Academy Dropdown Selection")
+        allure.dynamic.description("Verify user can select an option from the dropdown menu.")
+
+        academy_page = AcademyPage(driver)
+        with allure.step("Open academy page"):
+            academy_page.open_academyPage_page()
+        with allure.step("Select dropdown option by value"):
+            academy_page.selectDropdownByValue("option3")
+
+    @pytest.mark.ui
+    def test_academy_select_checkBox(self, driver):
+        allure.dynamic.story("Checkbox Feature")
+        allure.dynamic.title("Test Academy Checkbox Selection")
+        allure.dynamic.description("Verify user can select the checkbox.")
+        academy_page = AcademyPage(driver)
+        with allure.step("Open academy page"):
+            academy_page.open_academyPage_page()
+        with allure.step("Select checkbox"):
+            academy_page.selectCheckBox()
 ```
+### 📊 Sample Allure Report For UI
+
+![Allure Report Screenshot](docs/images/allure_report_ui.png)
 
 ## Best Practices
 

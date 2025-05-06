@@ -1,3 +1,5 @@
+import os
+
 from jsonpath_ng import parse
 import curlify
 from jsonschema import validate, ValidationError
@@ -120,6 +122,12 @@ def validate_schema(response, schema):
     :param schema: JSON schema to validate against
     :return: None
     """
+    schema_validation_enabled = os.getenv("SCHEMA_VALIDATION", "true").lower() == "true"
+    print(schema_validation_enabled)
+    if not schema_validation_enabled:
+        log.info("Skipping schema validation as per configuration.")
+        return
+
     try:
         response1 = get_response_data(response)
         validate(instance=response1, schema=schema)

@@ -71,10 +71,36 @@ class AcademyPage(BasePage):
     def switchAlert(self,name):
         self.input_text(self.locators.alertName,name)
         self.click(self.locators.alertButton)
-        time.sleep(3)
-        print(self.wait_for_alert())
-        print("#######################")
-        self.accept_alert()
-        time.sleep(3)
+        self.wait_for_alert()
+        self.get_alert_text()
+        #self.accept_alert()
+        self.dismiss_alert()
 
 
+    def mouseHover(self):
+        self.hover_over_element(self.locators.mouseHover)
+        self.click(self.locators.topPage)
+
+
+    def coursesIframe(self):
+        self.switch_to_frame(self.locators.coursesIframe)
+        self.click(self.locators.Iframelogo)
+        self.switch_to_default_content()
+        self.selectCheckBox()
+
+    def webTable(self):
+
+        # headers=self.get_table_headers(self.locators.tableName,self.locators.header_locator)
+        # print(headers)
+
+        #table_data=self.get_table_data(self.locators.tableName,self.locators.header_locator,self.locators.row_locator,self.locators.cell_locator)
+        #print(table_data)
+
+        # column_value=self.get_row_by_column_value(self.locators.tableName,self.locators.header_locator,self.locators.row_locator,self.locators.cell_locator,"Price","20")
+        # print(column_value)
+
+        # cell_text=self.get_cell_text(self.locators.tableName,self.locators.header_locator,self.locators.row_locator,self.locators.cell_locator,1,"Price")
+        # print(cell_text)
+
+        sum_of_price= self.get_column_values_sum(self.locators.tableName,self.locators.header_locator,self.locators.row_locator,self.locators.cell_locator,"Price")
+        return sum_of_price

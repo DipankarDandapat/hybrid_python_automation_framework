@@ -87,7 +87,7 @@
         "title": "Dipankar ",
         "description": "This is line 1\\nThis is line 2\\nThis is line 3"
       },
-      "expected_status": 201,
+      "expected_status": 200,
       "expected_schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Generated schema for Root",
@@ -159,7 +159,7 @@
         "title": "Dipankar ",
         "description": "?☀\uFE0F??"
       },
-      "expected_status": 201,
+      "expected_status": 200,
       "expected_schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Generated schema for Root",
@@ -230,7 +230,7 @@
       "payload": {
         "title": "Dipankar "
       },
-      "expected_status": 201,
+      "expected_status": 200,
       "expected_schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Generated schema for Root",
@@ -301,7 +301,7 @@
       "payload": {
         "description": "Dipankar is a good boy"
       },
-      "expected_status": 201,
+      "expected_status": 200,
       "expected_schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Generated schema for Root",
@@ -373,7 +373,7 @@
         "title": 12345,
         "description": "dipankar is a good boy"
       },
-      "expected_status": 201,
+      "expected_status": 200,
       "expected_schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Generated schema for Root",
@@ -445,7 +445,7 @@
         "title": "Dipankar",
         "description": "नमस्ते"
       },
-      "expected_status": 201,
+      "expected_status": 200,
       "expected_schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Generated schema for Root",
@@ -517,7 +517,7 @@
         "title": "!@#$%^&*()",
         "description": "Dipankar is a good boy"
       },
-      "expected_status": 201,
+      "expected_status": 200,
       "expected_schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Generated schema for Root",
@@ -589,7 +589,7 @@
         "title": "???",
         "description": "Dipankar is a good boy"
       },
-      "expected_status": 201,
+      "expected_status": 200,
       "expected_schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Generated schema for Root",

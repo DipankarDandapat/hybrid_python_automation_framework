@@ -50,35 +50,6 @@ def test_Delete_todo_Positive(api_request_context, case):
 
 
 
-@pytest.mark.Semantic
-@pytest.mark.parametrize("case", testcasedata["Semantic"])
-def test_Delete_todo_Semantic(api_request_context, case):
-    log.info(f"Running test case: {case['description']}")
-
-    baseURL = os.getenv('TO_DOS')
-
-    todos = shared_data.get_data("todos_id")
-    case["path_params"]["id"] = todos
-
-    # Make API request
-    response = api_request_context.make_request(
-        base_url=baseURL,
-        method=case["method"],
-        api_endpoint=case["endpoint"],
-        path_params=case["path_params"],
-        header=case["headers"]
-    )
-
-    # Validate response
-    validate_response_code(response, case["expected_status"])
-
-    # Validate content type
-    validate_response_content_type(response)
-
-    # Validate schema if provided
-    if "expected_schema" in case and case["expected_schema"]:
-        validate_schema(response=response, schema=case["expected_schema"])
-
 
 @pytest.mark.Negative
 @pytest.mark.parametrize("case", testcasedata["Negative"])

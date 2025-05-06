@@ -60,5 +60,16 @@ class AutomationPracticeLocators:
     opentab =     (By.XPATH, "//a[@id='opentab']")
     alertName =     (By.XPATH, "//input[@id='name']")
     alertButton =     (By.XPATH, "//input[@id='alertbtn']")
+    mouseHover =     (By.XPATH, "//button[@id='mousehover']")
+    topPage =       (By.XPATH, "//a[contains(@href,'#top')]")
+    coursesIframe =   (By.XPATH, "//iframe[@id='courses-iframe']")
+    Iframelogo =   (By.XPATH, "//div[@class='logo']//a")
+
+    tableName =   (By.XPATH, "//table[@name='courses']")
+    header_locator = (By.XPATH, ".//tbody/tr[1]/th")
+    row_locator = (By.XPATH, ".//tbody//tr")
+    cell_locator = (By.TAG_NAME, "td")
+
+
 
 

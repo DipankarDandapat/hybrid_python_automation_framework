@@ -70,7 +70,7 @@ def setup_environment(request):
 def api_session():
     log.info("🌐 Creating API session")
     session = requests.Session()
-    retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504],allowed_methods=["HEAD", "GET", "OPTIONS", "POST", "PUT", "DELETE"],raise_on_status=False)
+    retries = Retry(total=5, backoff_factor=5, status_forcelist=[502, 503, 504],allowed_methods=["HEAD", "GET", "OPTIONS", "POST", "PUT", "DELETE"],raise_on_status=False)
     adapter = HTTPAdapter(max_retries=retries)
     session.mount('http://', adapter)
     session.mount('https://', adapter)
@@ -112,40 +112,79 @@ def driver(request, driver_manager):
     driver_manager.quit_driver()
 
 
+# @pytest.hookimpl(hookwrapper=True)
+# def pytest_runtest_makereport(item, call):
+#     now = datetime.now()
+#     pytest_html = item.config.pluginmanager.getplugin('html')
+#     outcome = yield
+#     report = outcome.get_result()
+#
+#     # ✅ Add description from parametrize or fixtures
+#     if "case" in item.fixturenames:
+#         case = item.callspec.params.get("case", {})
+#         description = case.get("description", "")
+#         setattr(report, "description", description)
+#
+#     extra = getattr(report, 'extra', [])
+#     # Only attach screenshots on failure/skipped with xfail
+#     if report.when in ('call', 'setup'):
+#         xfail = hasattr(report, 'wasxfail')
+#         if (report.skipped and xfail) or (report.failed and not xfail):
+#             # Check if Selenium driver is available
+#             driver = item.funcargs.get("driver", None)
+#             if driver:
+#                 try:
+#                     # Create screenshot directory
+#                     screenshots_dir = pathlib.Path(__file__).parent / "reports" / "screenshots"
+#                     screenshots_dir.mkdir(parents=True, exist_ok=True)
+#
+#                     # Generate screenshot filename
+#                     file_name = report.nodeid.replace("::", "_").replace("/", "_") + ".png"
+#                     screenshot_path = screenshots_dir / file_name
+#
+#                     # Save screenshot
+#                     driver.save_screenshot(str(screenshot_path))
+#
+#                     # Encode image to base64
+#                     with open(screenshot_path, "rb") as f:
+#                         encoded_image = base64.b64encode(f.read()).decode("utf-8")
+#                         html = f'<div><img src="data:image/png;base64,{encoded_image}" ' \
+#                                f'style="width:400px;height:auto;" ' \
+#                                f'onclick="window.open(this.src)" align="right"/></div>'
+#                         extra.append(pytest_html.extras.html(html))
+#                 except Exception as e:
+#                     print(f"Screenshot capture failed: {e}")
+#
+#         report.extras = extra
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
+    from datetime import datetime
+    import pathlib, base64
     now = datetime.now()
     pytest_html = item.config.pluginmanager.getplugin('html')
     outcome = yield
     report = outcome.get_result()
 
-    # ✅ Add description from parametrize or fixtures
-    if "case" in item.fixturenames:
+    # ✅ Safe check for parametrize description
+    if "case" in item.fixturenames and hasattr(item, "callspec"):
         case = item.callspec.params.get("case", {})
         description = case.get("description", "")
         setattr(report, "description", description)
 
     extra = getattr(report, 'extra', [])
-    # Only attach screenshots on failure/skipped with xfail
     if report.when in ('call', 'setup'):
         xfail = hasattr(report, 'wasxfail')
         if (report.skipped and xfail) or (report.failed and not xfail):
-            # Check if Selenium driver is available
             driver = item.funcargs.get("driver", None)
             if driver:
                 try:
-                    # Create screenshot directory
                     screenshots_dir = pathlib.Path(__file__).parent / "reports" / "screenshots"
                     screenshots_dir.mkdir(parents=True, exist_ok=True)
-
-                    # Generate screenshot filename
                     file_name = report.nodeid.replace("::", "_").replace("/", "_") + ".png"
                     screenshot_path = screenshots_dir / file_name
-
-                    # Save screenshot
                     driver.save_screenshot(str(screenshot_path))
-
-                    # Encode image to base64
                     with open(screenshot_path, "rb") as f:
                         encoded_image = base64.b64encode(f.read()).decode("utf-8")
                         html = f'<div><img src="data:image/png;base64,{encoded_image}" ' \
@@ -154,8 +193,8 @@ def pytest_runtest_makereport(item, call):
                         extra.append(pytest_html.extras.html(html))
                 except Exception as e:
                     print(f"Screenshot capture failed: {e}")
+        report.extra = extra
 
-        report.extras = extra
 
 
 def pytest_html_results_table_header(cells):

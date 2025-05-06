@@ -2,6 +2,8 @@ import os
 import time
 import datetime
 from functools import wraps
+
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -607,7 +609,6 @@ class BasePage:
             log.error(f"Failed to press key '{key}': {e}")
             raise
 
-
     def press_key_down(self, key, locator=None, timeout=None):
         """
         Press and hold any key, optionally on a specific element.
@@ -847,7 +848,7 @@ class BasePage:
         try:
             alert = self.wait_for_alert(timeout)
             alert_text = alert.text  # Get text before dismissing
-            log.info(f"Alert text: ", {alert_text}, "")
+            log.info(f"Alert text: {alert_text}")
             alert.dismiss()
             log.info("Alert dismissed successfully")
         except Exception as e:
@@ -861,7 +862,7 @@ class BasePage:
         try:
             alert = self.wait_for_alert(timeout)
             text = alert.text
-            log.info(f"Alert text: ", {text}, "")
+            log.info(f"Alert text: {text}")
             return text
         except Exception as e:
             log.error(f"Failed to get alert text: {str(e)}")
@@ -869,12 +870,12 @@ class BasePage:
 
     def send_text_to_alert(self, text, timeout=None):
         """Sends text to an alert prompt."""
-        log.info(f"Sending text ", {text}, f" to alert")
+        log.info(f"Sending text '{text}' to alert")
         try:
             alert = self.wait_for_alert(timeout)
             alert.send_keys(text)
-            log.info(f"Sent text ", {text}, f" to alert successfully.")
-            # Usually followed by accept or dismiss
+            log.info(f"Sent text '{text}' to alert successfully.")
+            # Usually followed by alert.accept() or alert.dismiss()
         except Exception as e:
             log.error(f"Failed to send text to alert: {str(e)}")
             raise
@@ -1386,9 +1387,98 @@ class BasePage:
         return self
 
 
+    #To support Static and Dynamic Web Tables effectively in your framework without hardcoding XPath or column/row indexes
+    def get_table_headers(self, table_locator,header_locator):
+        """Returns the header titles as a list from the table."""
+        headers = []
+        element = self._wait_for_condition(table_locator, EC.visibility_of_element_located)
+        header_elements = element.find_elements(*header_locator)
+        for header in header_elements:
+            headers.append(header.text.strip())
+        return headers
 
+    def get_table_data(self, table_locator, header_locator, row_locator, cell_locator):
+        """
+        Returns all table data as a list of dictionaries (header: value).
 
+        Args:
+            table_locator (tuple): Locator for the <table> element.
+            header_locator (tuple): Locator for header cells (th).
+            row_locator (tuple): Locator for all table rows (tr).
+            cell_locator (tuple): Locator for all cells within a row (td).
 
+        Returns:
+            list[dict]: List of row dictionaries with header: value mapping.
+        """
+        table = self._wait_for_condition(table_locator, EC.visibility_of_element_located)
 
+        headers = [header.text.strip() for header in table.find_elements(*header_locator)]
+        rows = table.find_elements(*row_locator)
+        data = []
 
+        for row in rows:
+            cells = row.find_elements(*cell_locator)
+            row_data = {
+                headers[i]: cells[i].text.strip() if i < len(cells) else ""
+                for i in range(len(headers))
+            }
+            data.append(row_data)
 
+        return data
+
+    def get_row_by_column_value(self, table_locator,header_locator, row_locator, cell_locator, column_name, value):
+        """
+        Returns the first row where the given column matches the specified value.
+        """
+        matching_rows = []
+        all_rows = self.get_table_data(table_locator,header_locator, row_locator, cell_locator)
+        for row in all_rows:
+            if row.get(column_name) == value:
+                matching_rows.append(row)
+
+        return matching_rows
+
+    def get_cell_text(self,table_locator,header_locator, row_locator, cell_locator, row_index, column_name):
+        """
+        Returns text of a cell based on row index and column header.
+        Row index is 0-based.
+        """
+        data = self.get_table_data(table_locator, header_locator, row_locator, cell_locator)
+        if 0 <= row_index < len(data):
+            return data[row_index].get(column_name)
+        return None
+
+    def get_column_values_sum(self, table_locator, header_locator, row_locator, cell_locator, column_name):
+        """
+        Returns the sum of all numeric values in a specified column of the table.
+
+        Args:
+            table_locator (tuple): Locator for the table.
+            header_locator (tuple): Locator for header elements (relative to table).
+            row_locator (tuple): Locator for row elements (relative to table).
+            cell_locator (tuple): Locator for cell elements (relative to row).
+            column_name (str): Name of the column to sum values from.
+
+        Returns:
+            float: Sum of the values in the column.
+        """
+        table = self._wait_for_condition(table_locator, EC.visibility_of_element_located)
+        headers = [th.text.strip() for th in table.find_elements(*header_locator)]
+        rows = table.find_elements(*row_locator)
+
+        total = 0
+        for row in rows:
+            cells = row.find_elements(*cell_locator)
+            if len(cells) != len(headers):
+                continue  # Skip malformed rows
+            row_data = dict(zip(headers, [cell.text.strip() for cell in cells]))
+            value = row_data.get(column_name, "").replace("$", "").strip()
+            if value.isdigit():
+                total += int(value)
+            else:
+                try:
+                    total += float(value)
+                except ValueError:
+                    continue  # Skip non-numeric values
+
+        return total
