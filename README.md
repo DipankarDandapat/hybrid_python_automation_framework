@@ -9,9 +9,12 @@
 6. [API Testing](#api-testing)
 7. [UI Testing](#ui-testing)
 8. [Reporting](#reporting)
-9. [Extending the Framework](#extending-the-framework)
-10. [Best Practices](#best-practices)
-11. [Allure Reporting Implementation Guide](#Allure-Reporting-Implementation-Guide)
+9. [Allure Reporting Implementation Guide](#Allure-Reporting-Implementation-Guide)
+10. [Jenkins Integration](#jenkins-integration)
+11. [Docker Integration](#docker-integration)
+12. [Features Development: Post-Execution Notifications](#features-development-post-execution-notifications)
+13. [Best Practices](#best-practices)
+
 
 ## Introduction
 
@@ -358,53 +361,7 @@ The framework includes comprehensive logging with:
 - Configurable log levels (INFO, DEBUG, etc.)
 - Detailed log format with timestamps and source information
 
-## Extending the Framework
 
-### Adding New API Tests
-
-1. Add test data to `data/test_data/AITestPlatformData/`
-2. Create a new test module in `tests/api/`
-3. Implement test functions using the API client and test data
-
-### Adding New UI Tests
-
-1. Add locators to `src/pages/locators.py`
-2. Create page objects in `src/pages/`
-3. Add test data if needed
-4. Create a new test module in `tests/ui/`
-5. Implement test functions using page objects
-
-### Adding New Environments
-
-1. Create a new environment file (e.g., `.env.dev`)
-2. Add environment-specific variables
-3. Use the new environment with `--environment=dev`
-
-## Best Practices
-
-### API Testing
-
-- Use parameterized tests for different test cases
-- Validate response status codes and schemas
-- Share response data between related tests
-- Handle API errors gracefully
-- Keep test data in JSON files
-
-### UI Testing
-
-- Follow the Page Object Model pattern
-- Keep locators centralized and well-organized
-- Use explicit waits for reliable element interactions
-- Take screenshots on test failures
-- Run tests in headless mode for CI/CD pipelines
-
-### General
-
-- Use descriptive test names and docstrings
-- Keep test data separate from test logic
-- Log important information for debugging
-- Use fixtures for common setup and teardown
-- Run tests in parallel when possible
 
 
 ## Allure Reporting Implementation Guide
@@ -704,3 +661,491 @@ class TestAcademy:
 6. **Handle Failures Gracefully**:
    - Attach additional information on test failure
    - Take screenshots on UI test failures
+
+
+## Jenkins Integration
+
+This section provides an example `Jenkinsfile` (Declarative Pipeline) for automating the execution of the Python pytest automation framework. This pipeline includes parameterized options for selecting the environment, test type, and UI testing configurations (local or cloud).
+
+```groovy
+pipeline {
+    agent any
+    environment {
+        PYTHON_VERSION = "3.10"
+        python_location = 'C:\\Program Files\\Python313\\python.exe'
+        VENV_DIR = "venv"
+        BS_CREDENTIALS_ID = "browserstack-credentials"
+        LT_CREDENTIALS_ID = "lambdatest-credentials"
+    }
+    parameters {
+        string(name: 'GIT_REPO_URL', defaultValue: 'https://github.com/DipankarDandapat/hybrid_python_automation_framework.git', description: 'Git repository URL for the automation framework')
+        string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'Git branch to checkout')
+        choice(name: 'ENVIRONMENT', choices: ["staging", "prod"], description: 'Select the target environment')
+        choice(name: 'TEST_TYPE', choices: ["api", "ui", "all"], description: 'Select the type of tests to run')
+        choice(name: 'TEST_CASE_TYPE', choices: ["Positive", "Negative", "Semantic","Smoke","Regression"], description: 'Select the test type of tests case to run')
+        choice(name: 'UI_LOCATION', choices: ["none", "local", "cloud"], description: 'Run UI tests locally or on cloud (Select \'none\' for API tests only)')
+        choice(name: 'LOCAL_BROWSER', choices: ["chrome", "firefox", "edge"], description: 'Select the browser for local UI execution')
+        booleanParam(name: 'HEADLESS_MODE', defaultValue: false, description: 'Run the local browser in headless mode?')
+        choice(name: 'CLOUD_PROVIDER', choices: ["browserstack", "lambdatest"], description: 'Select the cloud testing provider')
+        string(name: 'CLOUD_PLATFORM', defaultValue: 'Windows 10', description: 'Specify the OS platform for cloud testing')
+        string(name: 'CLOUD_BROWSER', defaultValue: 'chrome', description: 'Specify the browser name for cloud testing')
+        string(name: 'CLOUD_BROWSER_VERSION', defaultValue: 'latest', description: 'Specify the browser version for cloud testing')
+    }
+    // triggers {
+    //     parameterizedCron('''
+    //         // H/5 * * * * %ENVIRONMENT=staging;TEST_TYPE=api;TEST_CASE_TYPE=Positive
+    //         //H/5 * * * * %ENVIRONMENT=staging;TEST_TYPE=ui;UI_LOCATION=local;LOCAL_BROWSER=chrome
+    //         H/5 * * * * %ENVIRONMENT=staging;TEST_TYPE=ui;UI_LOCATION=cloud;CLOUD_PROVIDER=browserstack;CLOUD_BROWSER=firefox
+    //     ''')
+    // }
+    
+    
+    stages {
+        
+        stage('Cleanup Workspace') {
+            steps {
+                // Clean workspace before build
+                cleanWs()
+                echo "Cleaned up workspace."
+            }
+        }
+        stage('Checkout Code from GIT') {
+            steps {
+                script {
+                    echo "Checking out code from ${params.GIT_REPO_URL} branch ${params.GIT_BRANCH}"
+                }
+                checkout scmGit(
+                    branches: [[name: "*/${params.GIT_BRANCH}"]],
+                    extensions: [],
+                    userRemoteConfigs: [[url: "${params.GIT_REPO_URL}"]]
+                )
+                echo 'Check out git successfully!'
+            }
+        }
+        stage('Setup Python Environment') {
+            steps {
+                script {
+                    echo "Setting up Python ${env.PYTHON_VERSION} virtual environment"
+                    bat "\"${python_location}\" -m venv ${env.VENV_DIR}"
+                    echo "Installing dependencies from requirements.txt"
+                    bat "${env.VENV_DIR}\\Scripts\\activate && python -m pip install --upgrade pip && pip install -r requirements.txt"
+                    echo "Installed dependencies ...."
+                }
+            }
+        }
+        stage('Execute Pytest Tests') {
+            steps {
+                script {
+                    echo "Constructing pytest command based on parameters..."
+                    
+                    // Base pytest command with environment activation
+                    def pytestCommand = "${env.VENV_DIR}\\Scripts\\activate.bat && pytest tests"
+                    
+                    // Add common options
+                    //pytestCommand += " --verbose"
+                    pytestCommand += " --environment=${params.ENVIRONMENT}"
+                    
+                    if (params.TEST_TYPE = 'api') {
+                        pytestCommand += " --test-type=${params.TEST_TYPE}"
+                        pytestCommand += " -m=${params.TEST_CASE_TYPE}"
+                        echo "Running only ${params.TEST_TYPE} tests."
+                        
+                    } else {
+                        echo "Running all tests (API and UI)."
+                    }
+                    // Add test type filtering marker if not running 'all'
+                    if (params.TEST_TYPE != 'all') {
+                        pytestCommand += " --test-type=${params.TEST_TYPE}"
+                        // pytestCommand += " -m=${params.TEST_CASE_TYPE}"
+
+                        
+                        echo "Running only ${params.TEST_TYPE} tests."
+                    } else {
+                        echo "Running all tests (API and UI)."
+                    }
+                    
+                    // --- Handle UI Test Parameters ---
+                    def runUiTests = (params.TEST_TYPE == 'ui' || params.TEST_TYPE == 'all')
+                    def uiLocation = params.UI_LOCATION
+                    def executedInWithCredentials = false // Flag to track if sh command ran inside withCredentials
+                    
+                    if (runUiTests) {
+                        if (uiLocation == 'local') {
+                            echo "Configuring for uiLocation in local platform"
+                            echo "Configuring for Local UI tests on ${params.LOCAL_BROWSER}"
+                            pytestCommand += " --browser=${params.LOCAL_BROWSER}"
+                            if (params.HEADLESS_MODE) {
+                                pytestCommand += " --headless"
+                                echo "Headless mode enabled."
+                            }
+                        } else if (uiLocation == 'cloud') {
+                            echo "Configuring for Cloud UI tests on ${params.CLOUD_PROVIDER}"
+                            pytestCommand += " --remote" // Flag to indicate cloud execution
+                            pytestCommand += " --browser=${params.CLOUD_BROWSER}" // Cloud browser name
+                            pytestCommand += " --platform=\"${params.CLOUD_PLATFORM}\"" // Cloud platform (ensure quoted)
+                            // pytestCommand += " --browser-version=${params.CLOUD_BROWSER_VERSION}"
+                            
+                            // Remote URL based on provider
+                            def remoteUrl = (params.CLOUD_PROVIDER == 'browserstack') 
+                                ? "https://hub-cloud.browserstack.com/wd/hub"
+                                : "https://hub.lambdatest.com/wd/hub"
+                            // pytestCommand += " --remote-url=\"${remoteUrl}\""
+                            
+                            // Determine which credentials to use
+                            def cloudCredsId = (params.CLOUD_PROVIDER == 'browserstack') 
+                                ? env.BS_CREDENTIALS_ID : env.LT_CREDENTIALS_ID
+                                
+                            // Use withCredentials block to securely inject credentials
+                            withCredentials([usernamePassword(
+                                credentialsId: cloudCredsId, 
+                                usernameVariable: 'CLOUD_USERNAME', 
+                                passwordVariable: 'CLOUD_ACCESS_KEY')]) {
+                                
+                                // Add the credentials as command line arguments
+                                // These will be processed by your conftest.py
+                                pytestCommand += " --bs-username=\"${CLOUD_USERNAME}\"" 
+                                pytestCommand += " --bs-access-key=\"${CLOUD_ACCESS_KEY}\""
+                                
+                                echo "Executing tests on ${params.CLOUD_PROVIDER} with secure credentials..."
+                                
+                                try {
+                                    bat "${pytestCommand}"
+                                    
+                                    executedInWithCredentials = true // Mark as executed
+                                } catch (err) {
+                                    echo "Pytest execution failed: ${err.getMessage()}"
+                                    currentBuild.result = 'FAILURE'
+                                }
+                            }
+                        } else if (uiLocation == 'none') {
+                            // If UI tests were selected but location is 'none', log a warning.
+                            // The framework's conftest.py might skip UI tests if --browser is not provided, or you might add specific logic.
+                            echo "UI Location set to 'none' but Test Type is '${params.TEST_TYPE}'. UI tests might be skipped or fail if not configured correctly."
+                        }
+                    } else {
+                        echo "Skipping UI specific configuration as Test Type is 'api'."
+                    }
+                    
+                    // --- Execute Pytest Command ---
+                    // Execute the command only if it wasn't already run inside withCredentials (for cloud tests)
+                    if (!executedInWithCredentials) {
+                        echo "Executing Pytest command: ${pytestCommand}"
+                        // Use try-catch to ensure pipeline continues to post actions even if tests fail
+                        try {
+                            bat  "${pytestCommand}"
+                        } catch (err) {
+                            echo "Pytest execution failed: ${err.getMessage()}"
+                            // Optionally re-throw the error if you want the pipeline stage to fail
+                            // throw err 
+                            currentBuild.result = 'FAILURE' // Mark build as failed but continue to post actions
+                        }
+                    }
+                    
+                    
+                }
+            }
+        }
+    }
+    
+        post {
+        always {
+            script {
+                echo "Pipeline finished. Archiving reports and logs..."
+            }
+    
+            // Archive HTML report (still useful for download)
+            archiveArtifacts artifacts: 'reports/html_report/report.html', allowEmptyArchive: true
+    
+            // Publish HTML report (renders it properly in Jenkins UI)
+            publishHTML([
+                reportDir: 'reports/html_report',
+                reportFiles: 'report.html',
+                reportName: 'Pytest HTML Report',
+                reportTitles: 'Test Results Summary',
+                keepAll: true,
+                allowMissing: true,
+                alwaysLinkToLastBuild: true
+            ])
+    
+            // Archive log files
+            archiveArtifacts artifacts: 'AutoLogs/*.log', allowEmptyArchive: true
+    
+            // Archive Allure results if needed (uncomment if configured)
+            // allure([includeProperties: false, results: [[path: 'reports/allure-results']]])
+        }
+    
+        success {
+            script {
+                echo "Pipeline completed successfully."
+                // Add success notifications (e.g., Slack, Email)
+            }
+        }
+    
+        failure {
+            script {
+                echo "Pipeline failed."
+                // Add failure notifications
+            }
+        }
+    
+        unstable {
+            script {
+                echo "Pipeline finished with unstable status (e.g., test failures)."
+                // Add notifications for unstable builds if needed
+            }
+        }
+    }
+
+    
+}
+```
+
+
+
+
+
+## Docker Integration
+
+This section provides a sample `Dockerfile` to containerize the Python automation framework. This allows for consistent test execution environments across different machines and in CI/CD pipelines.
+
+### Sample Dockerfile
+
+```dockerfile
+# Use an official Python runtime as a parent image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy the requirements file into the container at /usr/src/app
+COPY requirements.txt ./
+
+# Install any needed packages specified in requirements.txt
+# Ensure pip is upgraded and then install dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire project directory into the container
+COPY . .
+
+# (Optional) If you have specific browser drivers or other system dependencies,
+# you might need to install them here. For example, for Chrome:
+# RUN apt-get update && apt-get install -y wget gnupg2
+# RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+# RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+# RUN apt-get update && apt-get install -y google-chrome-stable
+
+# Default command to run when the container starts (example: run all tests)
+# This might need to be adjusted based on how you trigger tests within the container.
+# For instance, you might have a shell script that sets up environment variables and then runs pytest.
+CMD [ "pytest", "tests", "--environment=staging", "--test-type=all" ]
+```
+
+### Building the Docker Image
+
+To build the Docker image, navigate to the root directory of your project (where the `Dockerfile` is located) and run:
+
+```bash
+docker build -t python-automation-framework .
+```
+
+### Running Tests using Docker
+
+Once the image is built, you can run your tests inside a Docker container. You might need to pass environment variables or mount volumes depending on your framework's configuration (e.g., for reports or test data).
+
+Example of running the container:
+
+```bash
+docker run --rm -e ENVIRONMENT=staging -e TEST_TYPE=api python-automation-framework
+```
+
+If your tests generate reports and you want to access them on your host machine, you can mount a volume:
+
+```bash
+docker run --rm -v $(pwd)/reports:/usr/src/app/reports python-automation-framework
+```
+
+**Note:** This Dockerfile is a basic example. You may need to customize it further based on your project's specific dependencies (e.g., specific browser versions, database drivers, or other system libraries) and how you intend to run your tests within the container (e.g., passing dynamic parameters, handling cloud service credentials securely).
+
+
+
+
+## 14. Features Development: Post-Execution Notifications
+
+This section outlines how to implement features for sending notifications, such as email and Slack messages, after test execution. This is typically handled in the `post` section of a Jenkins pipeline or can be integrated into your test framework's reporting hooks.
+
+### Sending Email Notifications
+
+You can use Python's built-in `smtplib` and `email` modules to send email notifications. This is useful for sending summary reports or alerts on test completion or failure.
+
+**Prerequisites:**
+
+*   Ensure your Python environment has access to an SMTP server.
+*   You might need to install `secure-smtplib` if you are using SSL/TLS: `pip install secure-smtplib` (though `smtplib` itself supports SSL/TLS).
+
+**Example Python Script (to be called from Jenkins or your framework):**
+
+```python
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+def send_email(subject, body, sender_email, receiver_email, smtp_server, smtp_port, smtp_user, smtp_password, use_tls=True):
+    """Sends an email notification."""
+    try:
+        message = MIMEMultipart()
+        message["From"] = sender_email
+        message["To"] = receiver_email
+        message["Subject"] = subject
+
+        message.attach(MIMEText(body, "html")) # Assuming body is HTML, use "plain" for plain text
+
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            if use_tls:
+                server.starttls()  # Secure the connection
+            server.login(smtp_user, smtp_password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
+        print(f"Email sent successfully to {receiver_email}!")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+# Example Usage (parameters would typically come from Jenkins environment or config files):
+if __name__ == "__main__":
+    email_subject = "Test Execution Report - COMPLETED"
+    # You would dynamically generate this body, perhaps linking to the Allure or HTML report
+    email_body = """
+    <html>
+        <body>
+            <p>The automated test suite has completed.</p>
+            <p>Status: SUCCESS</p> 
+            <p>View the detailed report <a href=\"http://your-jenkins-url/job/your-job/Allure_20Report/\">here</a>.</p>
+        </body>
+    </html>
+    """
+    
+    SENDER_EMAIL = "your_automation_email@example.com"
+    RECEIVER_EMAIL = "your_team_email@example.com"
+    SMTP_SERVER = "smtp.example.com"
+    SMTP_PORT = 587 # Or 465 for SSL
+    SMTP_USER = "your_smtp_username_or_email"
+    SMTP_PASSWORD = "your_smtp_password_or_app_password"
+
+    send_email(email_subject, email_body, SENDER_EMAIL, RECEIVER_EMAIL, 
+               SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD)
+```
+
+**Integration with Jenkins:**
+
+In your `Jenkinsfile`, you can call this Python script in the `post` block:
+
+```groovy
+// Inside post { success {} } or post { failure {} } or post { always {} }
+script {
+    // Assuming the script is named send_notification.py and is in your workspace
+    // You might need to activate your virtual environment if the script has dependencies
+    sh ". ${env.VENV_DIR}/bin/activate && python path/to/your/send_notification_script.py --type email --status ${currentBuild.result}"
+}
+```
+
+### Sending Slack Notifications
+
+For Slack notifications, you can use the `slack_sdk` Python library. This allows for rich, formatted messages to be sent to specific Slack channels.
+
+**Prerequisites:**
+
+1.  Install the `slack_sdk`: `pip install slack_sdk`
+2.  Create a Slack App and obtain a Bot User OAuth Token (starts with `xoxb-`).
+3.  Add the bot to the desired Slack channel(s).
+
+**Example Python Script:**
+
+```python
+import os
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+
+def send_slack_message(channel_id, message_text, slack_bot_token):
+    """Sends a message to a Slack channel."""
+    client = WebClient(token=slack_bot_token)
+    try:
+        response = client.chat_postMessage(
+            channel=channel_id,
+            text=message_text,
+            # You can use blocks for richer formatting:
+            # blocks=[
+            #     {
+            #         "type": "section",
+            #         "text": {
+            #             "type": "mrkdwn",
+            #             "text": message_text
+            #         }
+            #     }
+            # ]
+        )
+        print(f"Slack message sent successfully to channel {channel_id}: {response["ts"]}")
+    except SlackApiError as e:
+        print(f"Error sending Slack message: {e.response["error"]}")
+
+# Example Usage:
+if __name__ == "__main__":
+    # These would typically be environment variables or Jenkins credentials
+    SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN") # Store securely!
+    SLACK_CHANNEL_ID = "C0XXXXXXX" # Your target channel ID
+
+    if not SLACK_BOT_TOKEN:
+        print("Error: SLACK_BOT_TOKEN environment variable not set.")
+    else:
+        test_status = "SUCCESS"
+        report_url = "http://your-jenkins-url/job/your-job/HTML_20Report/"
+        slack_message = f"Test Execution Completed!\nStatus: *{test_status}*\nHTML Report: {report_url}"
+        
+        send_slack_message(SLACK_CHANNEL_ID, slack_message, SLACK_BOT_TOKEN)
+```
+
+**Integration with Jenkins:**
+
+Similar to email, you can call this script from your `Jenkinsfile`. Ensure the `SLACK_BOT_TOKEN` is managed securely using Jenkins Credentials.
+
+```groovy
+// Inside post { ... } section
+script {
+    withCredentials([string(credentialsId: 'slack-bot-token-credential', variable: 'SLACK_TOKEN_FROM_JENKINS')]) {
+        // Set it as an environment variable for the script
+        env.SLACK_BOT_TOKEN = SLACK_TOKEN_FROM_JENKINS
+        sh ". ${env.VENV_DIR}/bin/activate && python path/to/your/send_notification_script.py --type slack --status ${currentBuild.result}"
+    }
+}
+```
+
+**Considerations for Both:**
+
+*   **Security:** Store credentials (SMTP passwords, Slack tokens) securely, for example, using Jenkins Credentials and injecting them as environment variables rather than hardcoding them in scripts.
+*   **Modularity:** Create separate utility scripts or functions for notifications and call them from your main test execution logic or CI pipeline.
+*   **Content:** Tailor the notification content to provide relevant information, such as test status, links to reports, and specific failure details if applicable.
+*   **Error Handling:** Implement robust error handling in your notification scripts to prevent them from failing the entire pipeline if a notification service is temporarily unavailable.
+
+## Best Practices
+
+### API Testing
+
+- Use parameterized tests for different test cases
+- Validate response status codes and schemas
+- Share response data between related tests
+- Handle API errors gracefully
+- Keep test data in JSON files
+
+### UI Testing
+
+- Follow the Page Object Model pattern
+- Keep locators centralized and well-organized
+- Use explicit waits for reliable element interactions
+- Take screenshots on test failures
+- Run tests in headless mode for CI/CD pipelines
+
+### General
+
+- Use descriptive test names and docstrings
+- Keep test data separate from test logic
+- Log important information for debugging
+- Use fixtures for common setup and teardown
+- Run tests in parallel when possible
