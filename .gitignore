@@ -1,7 +1,7 @@
 # Ignore IDE folders
 .idea/
 .vscode/
-
+.__pycache__/
 # Byte-compiled / cache
 __pycache__/
 *.py[cod]

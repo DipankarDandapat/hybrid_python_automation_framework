@@ -319,24 +319,25 @@ UI tests are created using the Page Object Model pattern:
 
 ```python
 import pytest
-from src.pages.login_page import LoginPage
-from src.pages.dashboard_page import DashboardPage
+from src.pages.AutomationExercisePage.login_page import LoginPage
+from src.pages.AutomationExercisePage.dashboard_page import DashboardPage
 from API_Utilities.logger_utility import customLogger
 
 log = customLogger()
 
+
 class TestLogin:
-    def test_valid_login(self, driver, ui_test_data):
-        # Initialize pages
-        login_page = LoginPage(driver)
-        dashboard_page = DashboardPage(driver)
-        
-        # Perform login
-        login_page.open_login_page()
-        login_page.login("username", "password")
-        
-        # Verify login success
-        assert dashboard_page.is_dashboard_displayed()
+   def test_valid_login(self, driver, ui_test_data):
+      # Initialize pages
+      login_page = LoginPage(driver)
+      dashboard_page = DashboardPage(driver)
+
+      # Perform login
+      login_page.open_login_page()
+      login_page.login("username", "password")
+
+      # Verify login success
+      assert dashboard_page.is_dashboard_displayed()
 ```
 
 ## Reporting

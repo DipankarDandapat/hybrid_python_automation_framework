@@ -1,81 +1,53 @@
 import time
 
 import pytest
-from selenium.webdriver.common.by import By
-from src.pages.base_page import BasePage
-from src.pages.locators import LoginPageLocators
-from src.pages.register_user_page import RegisterUserPage
+from src.pages.AutomationExercisePage.register_user_page import RegisterUserPage
 from src.utils import logger
+from src.utils.file_reader import read_file
+
 log = logger.customLogger()
 
-# class TestRegister:
-#     """Test class for Register functionality."""
-#
-#     @pytest.mark.ui
-#     def test_register(self, driver):
-#
-#
-#         register_user = RegisterUserPage(driver)
-#         register_user.open(url_path="login")
-#
-#         register_user.enterName("deep")
-#         register_user.enterEmail("d1@gmail.com")
-#         register_user.clickSignupButton()
-#         time.sleep(5)
-#         register_user.clickUserTitle("Mr.")
-#         time.sleep(5)
-#         register_user.scrollToAdress()
-#         time.sleep(5)
+testcasedata = read_file("AutomationExerciseData", 'register.json')
+
+class TestRegister:
+    """Test class for Register functionality."""
+
+    @pytest.mark.Positive
+    @pytest.mark.ui
+    @pytest.mark.parametrize("case", testcasedata["Positive"])
+    def test_register(self, driver,case):
+
+        register_user = RegisterUserPage(driver)
+        register_user.open_automationexercise_page()
+
+        register_user.enterName(case["register_user_name"])
+        register_user.enterEmail(case["register_user_email"])
+        register_user.clickSignupButton()
+        register_user.clickUserTitle(case["register_user_title"])
+        register_user.enterPassword(case["register_user_password"])
+        register_user.selectDate(case["register_user_birthDay"])
+        register_user.selectmonth(case["register_user_birthMonth"])
+        register_user.selectyear(case["register_user_birthYear"])
+        register_user.clickNewsletterBox()
+        register_user.clickSpecialoffersBox()
+        register_user.enterAddressfirstName(case["register_user_addressfirstName"])
+        register_user.enterAddresslastName(case["register_user_addresslastName"])
+        register_user.enterAddresscompany(case["register_user_addressCompany"])
+        register_user.enterStreetaddress(case["register_user_streetAddress"])
+        register_user.enterAddress(case["register_user_address"])
+
+        register_user.selectCountry(case["register_user_selectCountry"])
+        register_user.enterState(case["register_user_state"])
+        register_user.enterCity(case["register_user_city"])
+        register_user.enterZipcode(case["register_user_zipcode"])
+        register_user.enterMobilenumber(case["register_user_mobilenumber"])
+        register_user.clickCreateaccountButton()
+        Accountcreatedmessage=register_user.getAccountcreatedmessage()
+        register_user.verifiytheCreateAccountmessage(Accountcreatedmessage,"ACOUNT CREATED!")
 
 
 
-    # @pytest.mark.ui
-    # def test_login_with_valid_credentials(self, driver):
-    #     """
-    #     Test login with valid credentials.
-    #
-    #     Args:
-    #         driver: WebDriver fixture
-    #     """
-        # Initialize base page
-        # base_page = BasePage(driver)
-        
-        # Open login page
-        # base_page.open("login")
-        #
-        # # Enter credentials and login
-        # base_page.input_text(LoginPageLocators.USERNAME_INPUT, "testuser")
-        # base_page.input_text(LoginPageLocators.PASSWORD_INPUT, "password123")
-        # base_page.click(LoginPageLocators.LOGIN_BUTTON)
-        #
-        # # Take screenshot
-        # base_page.take_screenshot("login_success.png")
-        #
-        # log.info("Login with valid credentials test completed")
 
-    # @pytest.mark.ui
-    # def test_login_with_invalid_credentials(self, driver):
-    #     """
-    #     Test login with invalid credentials.
-    #
-    #     Args:
-    #         driver: WebDriver fixture
-    #     """
-    #     # Initialize base page
-    #     base_page = BasePage(driver)
-        
-        # Open login page
-        # base_page.open("login")
-        #
-        # # Enter invalid credentials and login
-        # base_page.input_text(LoginPageLocators.USERNAME_INPUT, "invaliduser")
-        # base_page.input_text(LoginPageLocators.PASSWORD_INPUT, "invalidpassword")
-        # base_page.click(LoginPageLocators.LOGIN_BUTTON)
-        #
-        # # Verify error message is displayed
-        # assert base_page.is_element_present(LoginPageLocators.ERROR_MESSAGE), "Error message not displayed"
-        #
-        # # Take screenshot
-        # base_page.take_screenshot("login_failure.png")
-        #
-        # log.info("Login with invalid credentials test completed")
+
+
+

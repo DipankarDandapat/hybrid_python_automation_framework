@@ -22,23 +22,24 @@ from src.utils import logger
 log = logger.customLogger()
 
 # --- Retry Decorator ---
-def retry_on_stale(retries=3, delay=0.5):
-    """Decorator to retry a function call if StaleElementReferenceException occurs."""
+def retry_on_timeout(retries=1, delay=30):
+    """Decorator to retry a function call if TimeoutException occurs."""
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             attempts = 0
-            while attempts < retries:
+            while attempts <= retries:
                 try:
                     return func(*args, **kwargs)
-                except StaleElementReferenceException:
+                except (TimeoutException, WebDriverException) as e:
                     attempts += 1
+                    if attempts > retries:
+                        log.error(f"Operation failed after {retries} retry. Error: {str(e)}")
+                        raise
                     log.warning(
-                        f"StaleElementReferenceException caught (attempt {attempts}/{retries}). Retrying in {delay}s...")
+                        f"Timeout caught (attempt {attempts}/{retries}). Retrying in {delay}s...")
                     time.sleep(delay)
-            log.error(f"StaleElementReferenceException persisted after {retries} retries.")
-            raise StaleElementReferenceException(f"Element became stale after {retries} retries.")
 
         return wrapper
 
@@ -56,7 +57,7 @@ class BasePage:
             log.warning("Invalid EXPLICIT_WAIT env var. Using default: 20s")
             self.explicit_wait_timeout = 20
 
-        self.default_base_url = os.getenv("UI_BASE_URL", "https://example.com")
+        self.default_base_url = os.getenv("AUTOMATIONEXERCISE_BASE_URL", "https://google.com")
         self.screenshots_dir = os.getenv("SCREENSHOTS_DIR", "reports/screenshots")
         os.makedirs(self.screenshots_dir, exist_ok=True)
         log.info(f"Initialized BasePage. Base URL: {self.default_base_url}, Default Wait: {self.explicit_wait_timeout}s")
@@ -138,7 +139,7 @@ class BasePage:
             raise
         return self
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def find_element(self, locator, timeout=None):
         """
         Find a single element using the specified locator and wait condition.
@@ -153,7 +154,7 @@ class BasePage:
         log.info(f"Finding element: {locator}")
         return self._wait_for_condition(locator, EC.presence_of_element_located, timeout)
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def find_elements(self, locator, timeout=None):
         """
         Find multiple elements using the specified locator.
@@ -168,7 +169,7 @@ class BasePage:
         log.info(f"Finding elements: {locator}")
         return self._wait_for_condition(locator, EC.presence_of_all_elements_located, timeout)
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def click(self, locator, timeout=None, use_js_fallback=True):
         """
         Clicks an element after ensuring it is clickable.
@@ -209,7 +210,7 @@ class BasePage:
             raise
         return self
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def input_text(self, locator, text, clear_first=True, timeout=None):
         """
         Inputs text into an element after ensuring it is visible.
@@ -239,7 +240,7 @@ class BasePage:
         return self
 
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def get_text(self, locator, timeout=None):
         """
         Gets the text content of an element.
@@ -255,15 +256,15 @@ class BasePage:
         try:
             element = self._wait_for_condition(locator, EC.visibility_of_element_located, timeout)
             text = element.text
-            log.info(f"Got text ", "********" if "password" in str(locator).lower() else f"\"{text}\"",
-                     f" from element: {locator}")
+            masked_text = "********" if "password" in str(locator).lower() else f"\"{text}\""
+            log.info(f"Got text {masked_text} from element: {locator}")
             return text
         except Exception as e:
             log.error(f"Failed to get text from element {locator}: {str(e)}")
             self.take_screenshot("get_text_failed")
             raise
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def get_attribute(self, locator, attribute_name, timeout=None):
         """
         Gets the value of a specified attribute of an element.
@@ -355,7 +356,7 @@ class BasePage:
             log.info(f"Element is still visible or present: {locator}")
             return False
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def is_element_enabled(self, locator, timeout=None):
         """
         Checks if an element is enabled.
@@ -377,7 +378,7 @@ class BasePage:
             log.error(f"Failed to check if element {locator} is enabled: {str(e)}")
             return False  # Return False on error
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def is_element_selected(self, locator, timeout=None):
         """
         Checks if a checkbox or radio button element is selected.
@@ -490,7 +491,7 @@ class BasePage:
 
     # --- Dropdown Methods ---
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def select_dropdown_option_by_text(self, locator, visible_text, timeout=None):
         """Selects an option from a dropdown by its visible text."""
         log.info(f"Selecting dropdown option by text: '{visible_text}' for locator: {locator}")
@@ -505,7 +506,7 @@ class BasePage:
             raise
         return self
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def select_dropdown_option_by_value(self, locator, value, timeout=None):
         """Selects an option from a dropdown by its value attribute."""
         log.info(f"Selecting dropdown option by value: '{value}' for locator: {locator}")
@@ -520,7 +521,7 @@ class BasePage:
             raise
         return self
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def select_dropdown_option_by_index(self, locator, index, timeout=None):
         """Selects an option from a dropdown by its index (0-based)."""
         log.info(f"Selecting dropdown option by index: {index} for locator: {locator}")
@@ -535,7 +536,7 @@ class BasePage:
             raise
         return self
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def get_dropdown_selected_option_text(self, locator, timeout=None):
         """Gets the text of the currently selected option in a dropdown."""
         log.info(f"Getting selected option text from dropdown: {locator}")
@@ -549,7 +550,7 @@ class BasePage:
             log.error(f"Failed to get selected dropdown text for {locator}: {str(e)}")
             return None
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def get_dropdown_options_texts(self, locator, timeout=None):
         """Gets the text of all options in a dropdown."""
         log.info(f"Getting all option texts from dropdown: {locator}")
@@ -565,7 +566,7 @@ class BasePage:
 
     # --- ActionChains Methods ---
 
-    @retry_on_stale()
+    @retry_on_timeout()
     def hover_over_element(self, locator, timeout=None):
         """Hovers the mouse cursor over an element."""
         log.info(f"Hovering over element: {locator}")
@@ -661,7 +662,7 @@ class BasePage:
             raise
 
 
-    @retry_on_stale()
+
     def double_click(self, locator, timeout=None):
         """Double-clicks on an element."""
         log.info(f"Double-clicking element: {locator}")
@@ -677,7 +678,7 @@ class BasePage:
             raise
         return self
 
-    @retry_on_stale()
+
     def right_click(self, locator, timeout=None):
         """Right-clicks (context clicks) on an element."""
         log.info(f"Right-clicking element: {locator}")
@@ -693,7 +694,7 @@ class BasePage:
             raise
         return self
 
-    @retry_on_stale()
+
     def drag_and_drop(self, source_locator, target_locator, timeout=None):
         """Drags an element from the source locator and drops it onto the target locator."""
         log.info(f"Dragging element {source_locator} to {target_locator}")
@@ -1248,7 +1249,7 @@ class BasePage:
 
     # --- File Upload ---
 
-    @retry_on_stale()
+
     def upload_file(self, locator, file_path, timeout=None):
         """
         Uploads a file using an input element (type="file").
@@ -1304,7 +1305,7 @@ class BasePage:
             log.error(f"Failed to take screenshot: {str(e)}")
             return None
 
-    @retry_on_stale()
+
     def get_element_size(self, locator, timeout=None):
         """Gets the size (width, height) of an element."""
         log.info(f"Getting size of element: {locator}")
@@ -1317,7 +1318,7 @@ class BasePage:
             log.error(f"Failed to get size of element {locator}: {str(e)}")
             return None
 
-    @retry_on_stale()
+
     def get_element_location(self, locator, timeout=None):
         """Gets the location (x, y coordinates) of an element relative to the top-left corner of the page."""
         log.info(f"Getting location of element: {locator}")
@@ -1331,7 +1332,6 @@ class BasePage:
             return None
 
 
-    @retry_on_stale()
     def find_and_click_element_by_text(self, locator, text_to_match, exact_match=True, timeout=None):
         """
         Finds elements matching the locator and clicks the one whose text matches.
@@ -1386,6 +1386,34 @@ class BasePage:
             raise
         return self
 
+    def verifyTextMatch(self, actualText, expectedText):
+        """
+        Verify text match
+
+        :param actualText: Actual Text
+        :param expectedText: Expected Text
+        """
+        log.info("Actual Text From Application Web UI --> :: " + actualText)
+        log.info("Expected Text From Application Web UI --> :: " + expectedText)
+        if expectedText.lower() == actualText.lower():
+            log.info("### VERIFICATIONS MATCHED !!!")
+            return True
+        else:
+            log.error("### VERIFICATIONS DID NOT MATCH !!!")
+            assert False, f"Text mismatch: Expected '{expectedText}', but got '{actualText}'"
+
+    def verifyPageTitle(self, titleToVerify):
+        """
+        Verify the page Title
+
+        :param titleToVerify: Title on the page that needs to be verified
+        """
+        try:
+            actualTitle = self.get_title()
+            return self.verifyTextMatch(actualTitle, titleToVerify)
+        except Exception as e:
+            log.error(f"Failed to get page title: {e}")
+            assert False, f"Failed to get page title or mismatch with expected '{titleToVerify}'"
 
     #To support Static and Dynamic Web Tables effectively in your framework without hardcoding XPath or column/row indexes
     def get_table_headers(self, table_locator,header_locator):

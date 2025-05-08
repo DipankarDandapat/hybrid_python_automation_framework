@@ -8,7 +8,6 @@ from src.utils import logger
 
 log = logger.customLogger()
 
-from selenium.webdriver.common.keys import Keys
 class AcademyPage(BasePage):
     """Login Page class for handling login functionality."""
 
@@ -25,7 +24,7 @@ class AcademyPage(BasePage):
 
     def open_academyPage_page(self):
         log.info("Opening AcademyPage page")
-        self.open("RAHULSHETTYACADEMY",url_path="AutomationPractice")
+        self.open("RAHULSHETTYACADEMY_BASE_URL",url_path="AutomationPractice")
         return self
 
     def clickRadioButtonBaseonName(self, buttonName):

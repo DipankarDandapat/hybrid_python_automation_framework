@@ -37,7 +37,7 @@ def test_Update_todo_Positive(api_request_context, case):
         payload=case["payload"]
     )
 
-    
+
     # Validate response
     validate_response_code(response, case["expected_status"])
     # Validate content type
